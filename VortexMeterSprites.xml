@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Sprites>
+	<Sprite Name="Header" Cycle="1">
+		<Frame Texture="textures\header.png" x0="0" x1="0" x2="0" x3="26" x4="241" x5="256" y0="1" y1="1" y2="1" y3="1" y4="1" y5="32" HotspotX="-25" HotspotY="-20" Duration="1.000" StartColor="white" EndColor="white"/>
+	</Sprite>
+	<Sprite Name="CloseButton" Cycle="1">
+		<Frame Texture="textures\icons-shadowless\cross.png" x0="0" x1="0" x2="0" x3="0" x4="0" x5="16" y0="0" y1="0" y2="0" y3="0" y4="0" y5="16" HotspotX="0" HotspotY="0" Duration="1.000" StartColor="white" EndColor="white"/>
+	</Sprite>
+	<Sprite Name="CopyButton" Cycle="1">
+		<Frame Texture="textures\icons-shadowless\megaphone.png" x0="0" x1="0" x2="0" x3="0" x4="0" x5="16" y0="0" y1="0" y2="0" y3="0" y4="0" y5="16" HotspotX="0" HotspotY="0" Duration="1.000" StartColor="white" EndColor="white"/>
+	</Sprite>
+	<Sprite Name="ClearButton" Cycle="1">
+		<Frame Texture="textures\icons-shadowless\broom.png" x0="0" x1="0" x2="0" x3="0" x4="0" x5="16" y0="0" y1="0" y2="0" y3="0" y4="0" y5="16" HotspotX="0" HotspotY="0" Duration="1.000" StartColor="white" EndColor="white"/>
+	</Sprite>
+	<Sprite Name="JumpButton" Cycle="1">
+		<Frame Texture="textures\icons-shadowless\pin.png" x0="0" x1="0" x2="0" x3="0" x4="0" x5="16" y0="0" y1="0" y2="0" y3="0" y4="0" y5="16" HotspotX="0" HotspotY="0" Duration="1.000" StartColor="white" EndColor="white"/>
+	</Sprite>
+	<Sprite Name="ConfigButton" Cycle="1">
+		<Frame Texture="textures\icons-shadowless\gear.png" x0="0" x1="0" x2="0" x3="0" x4="0" x5="16" y0="0" y1="0" y2="0" y3="0" y4="0" y5="16" HotspotX="0" HotspotY="0" Duration="1.000" StartColor="white" EndColor="white"/>
+	</Sprite>
+	<Sprite Name="EnemiesButton" Cycle="1">
+		<Frame Texture="textures\icons-shadowless\animal-monkey.png" x0="0" x1="0" x2="0" x3="0" x4="0" x5="16" y0="0" y1="0" y2="0" y3="0" y4="0" y5="16" HotspotX="0" HotspotY="0" Duration="1.000" StartColor="white" EndColor="white"/>
+	</Sprite>
+	<Sprite Name="PlayersButton" Cycle="1">
+		<Frame Texture="textures\icons-shadowless\user.png" x0="0" x1="0" x2="0" x3="0" x4="0" x5="16" y0="0" y1="0" y2="0" y3="0" y4="0" y5="16" HotspotX="0" HotspotY="0" Duration="1.000" StartColor="white" EndColor="white"/>
+	</Sprite>
+	<Sprite Name="StartButton" Cycle="1">
+		<Frame Texture="textures\icons-shadowless\control.png" x0="0" x1="0" x2="0" x3="0" x4="0" x5="16" y0="0" y1="0" y2="0" y3="0" y4="0" y5="16" HotspotX="0" HotspotY="0" Duration="1.000" StartColor="white" EndColor="white"/>
+	</Sprite>
+	<Sprite Name="StopButton" Cycle="1">
+		<Frame Texture="textures\icons-shadowless\control-stop-square.png" x0="0" x1="0" x2="0" x3="0" x4="0" x5="16" y0="0" y1="0" y2="0" y3="0" y4="0" y5="16" HotspotX="0" HotspotY="0" Duration="1.000" StartColor="white" EndColor="white"/>
+	</Sprite>
+	<Sprite Name="ResizeLeft" Cycle="1">
+		<Frame Texture="textures\resizerLeft.png" x0="0" x1="0" x2="0" x3="0" x4="0" x5="16" y0="0" y1="0" y2="0" y3="0" y4="0" y5="16" HotspotX="0" HotspotY="0" Duration="1.000" StartColor="white" EndColor="white"/>
+	</Sprite>
+	<Sprite Name="ResizeRight" Cycle="1">
+		<Frame Texture="textures\resizerRight.png" x0="0" x1="0" x2="0" x3="0" x4="0" x5="16" y0="0" y1="0" y2="0" y3="0" y4="0" y5="16" HotspotX="0" HotspotY="0" Duration="1.000" StartColor="white" EndColor="white"/>
+	</Sprite>
+	<Sprite Name="Bar" Cycle="1">
+		<Frame Texture="textures\BantoBar.png" x0="0" x1="0" x2="0" x3="0" x4="256" x5="256" y0="0" y1="0" y2="0" y3="0" y4="32" y5="32" Stretchy="1" HotspotX="0" HotspotY="0" Duration="1.000" StartColor="white" EndColor="white"/>
+	</Sprite>
+	<Sprite Name="VortexIcon" Cycle="1">
+		<Frame Texture="textures\icon.tga" x0="0" x1="0" x2="0" x3="0" x4="32" x5="32" y0="0" y1="0" y2="0" y3="0" y4="32" y5="32" Stretchy="1" HotspotX="0" HotspotY="0" Duration="1.000" StartColor="white" EndColor="white"/>
+	</Sprite>
+</Sprites>

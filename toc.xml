@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<Addon Author="Vince, Vim" APIVersion="11" Name="VortexMeter" Description="Vortex Meter" Version="">
+	<Script Name="VortexMeter.lua"/>
+	<Script Name="locales/English.lua"/>
+	<Script Name="VortexMeter_Utilities.lua"/>
+	<Script Name="VortexMeter_UI.lua"/>
+	<Script Name="VortexMeter_Config.lua"/>
+	<Form Name="VortexMeter.xml"/>
+	<ReplaceAddon Name="StrikeHardMeter"/>
+</Addon>
