@@ -809,13 +809,13 @@ local function CombatEventsHandler(info, statType, damageAction)
 	
 	local amount = info[statType] or 0
 	
-	local overallCasterInCombat = VortexMeter.overallCombat:addPlayer(info.caster:GetId())
-	local casterInCombat = VortexMeter.CurrentCombat:addPlayer(info.caster:GetId())
-	
 	if info.owner then
 		VortexMeter.overallCombat:addPlayer(info.owner:GetId())
 		VortexMeter.CurrentCombat:addPlayer(info.owner:GetId())
 	end
+	
+	local overallCasterInCombat = VortexMeter.overallCombat:addPlayer(info.caster:GetId())
+	local casterInCombat = VortexMeter.CurrentCombat:addPlayer(info.caster:GetId())
 	
 	-- Add stat to caster
 	local stat
