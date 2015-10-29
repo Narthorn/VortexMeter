@@ -27,7 +27,6 @@ local floor = math.floor
 local ceil = math.ceil
 local round = function(val) return math.floor(val + .5) end
 
-local RelativeTo = 0
 local Dummy = function() end
 local AsyncRowHoverEventHelper = 0 -- e.g. mousein, mousein, mouseout :(
 local Windows = {}
@@ -836,7 +835,6 @@ function Window:timerUpdate(duration)
 	self.frames.timerLabel:SetText(FormatSeconds(duration))
 end
 function Window:setMode(mode, ...)
-	--RelativeTo = 0
 	RM.Tooltip:hide()
 	
 	local newMode = {}
@@ -1020,12 +1018,7 @@ function Modes.combat:update(window)
 		end
 		
 		row.leftLabel = (RM.settings.showRankNumber and i + window.scrollOffset .. ". " or "") .. player.name
-		
-		if RelativeTo > 0 then
-			row.rightLabel = BuildFormat(NumberFormat(player.value), player.value / duration, player.value / max(data.players[RelativeTo].value, 1) * 100)
-		else
-			row.rightLabel = BuildFormat(NumberFormat(player.value), player.value / duration, player.value / max(data.total, 1) * 100)
-		end
+		row.rightLabel = BuildFormat(NumberFormat(player.value), player.value / duration, player.value / max(data.total, 1) * 100)
 		
 		row.color = GetClassColor(player.ref.detail)
 		row.value = player.value
@@ -1139,12 +1132,7 @@ function Modes.filter:update(window)
 		end
 		
 		row.leftLabel = (RM.settings.showRankNumber and i + window.scrollOffset .. ". " or "") .. player.name
-		
-		if RelativeTo > 0 then
-			row.rightLabel = BuildFormat(NumberFormat(player.value), player.value / duration, player.value / max(data.players[RelativeTo].value, 1) * 100)
-		else
-			row.rightLabel = BuildFormat(NumberFormat(player.value), player.value / duration, player.value / max(data.total, 1) * 100)
-		end
+		row.rightLabel = BuildFormat(NumberFormat(player.value), player.value / duration, player.value / max(data.total, 1) * 100)
 		
 		row.color = GetClassColor(player.ref.detail)
 		row.value = player.value
@@ -1311,12 +1299,7 @@ function Modes.interactionAbilities:update(window)
 		
 		row.icon = ability.ref.detail.icon
 		row.leftLabel = "      " .. ability.ref.name
-		
-		if RelativeTo > 1 then
-			row.rightLabel = BuildFormat(NumberFormat(ability.value), ability.value / duration, ability.value / max(data.abilities[RelativeTo - 1].value, 1) * 100)
-		else
-			row.rightLabel = BuildFormat(NumberFormat(ability.value), ability.value / duration, ability.value / max(window.selectedPlayer[window.settings.sort], 1) * 100)
-		end
+		row.rightLabel = BuildFormat(NumberFormat(ability.value), ability.value / duration, ability.value / max(data.total, 1) * 100)
 		
 		row.color = RM.settings.abilityTypeColors[ability.ref.type]
 		row.value = ability.value
@@ -1555,12 +1538,7 @@ function Modes.abilities:update(window)
 		
 		row.icon = ability.ref.detail.icon
 		row.leftLabel = "      " .. ability.ref.name
-		
-		if RelativeTo > 1 then
-			row.rightLabel = BuildFormat(NumberFormat(ability.value), ability.value / duration, ability.value / max(data.abilities[RelativeTo - 1].value, 1) * 100)
-		else
-			row.rightLabel = BuildFormat(NumberFormat(ability.value), ability.value / duration, ability.value / max(window.selectedPlayer[window.settings.sort], 1) * 100)
-		end
+		row.rightLabel = BuildFormat(NumberFormat(ability.value), ability.value / duration, ability.value / max(data.total, 1) * 100)
 		
 		row.color = RM.settings.abilityTypeColors[ability.ref.type]
 		row.value = ability.value

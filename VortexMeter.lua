@@ -546,7 +546,7 @@ function Player:getTooltip(sort)
 	
 	for i = 1, 3 do
 		if abilities[i] then
-			tinsert(result, ("   (%d%%) %s"):format(abilities[i].total / self[sort] * 100, abilities[i].name:sub(0, 16)))
+			tinsert(result, ("   (%d%%) %s"):format(abilities[i].total / self:getStat(sort) * 100, abilities[i].name:sub(0, 16)))
 		end
 	end
 	
@@ -554,7 +554,7 @@ function Player:getTooltip(sort)
 	
 	for i = 1, 3 do
 		if players[i] then
-			tinsert(result, ("   (%d%%) %s"):format(players[i][sort] / self[sort] * 100, players[i].detail.name:sub(0, 16)))
+			tinsert(result, ("   (%d%%) %s"):format(players[i][sort] / self:getStat(sort) * 100, players[i].detail.name:sub(0, 16)))
 		end
 	end
 	
@@ -595,8 +595,7 @@ function Combat:getPreparedPlayerData(sort, showNpcs)
 	
 	local players = {}
 	for _, player in pairs(self.players) do
-		if (showNpcs and not player.detail.player and not player.detail.isPet)
-			or (not showNpcs and (player.detail.player and not player.detail.isPet)) then
+		if not player.detail.isPet and (not showNpcs == player.detail.player) then
 			tinsert(players, player)
 		end
 	end
@@ -623,7 +622,7 @@ function Combat:getPreparedPlayerData(sort, showNpcs)
 				ref = player
 			})
 			
-			data.total = data.total + value
+			data.total = data.total + valuePlusPets
 			data.count = data.count + 1
 		end
 	end
