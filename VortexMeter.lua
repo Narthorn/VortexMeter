@@ -250,9 +250,9 @@ end
 
 local Player = {}
 Player.__index = Player
-function Player:new(id, reduced)
+function Player:new(unit, reduced)
 	local self = {}
-	self.detail = Units[id]
+	self.detail = unit
 	self.reduced = reduced
 	self.damage = 0
 	self.damageTaken = 0
@@ -309,7 +309,7 @@ function Player:addAbility(interactedWith, statType, stat, amount, info)
 		local key = interactedWith and interactedWith or L["Unknown"]
 		local player = self.interactions[statType][key]
 		if not player then
-			player = self:new(interactedWith and interactedWith.id, true)
+			player = self:new(interactedWith, true)
 			if not player.detail then
 				player.detail = { name = key }
 			end
@@ -661,11 +661,10 @@ function Combat:getHostile()
 	
 	return ""
 end
-function Combat:addPlayer(id)
-	local unit = Units[id]
+function Combat:addPlayer(unit)
 	local player = self.players[unit]
 	if not player then
-		player = Player:new(id, false)
+		player = Player:new(unit, false)
 		self.players[unit] = player
 	end
 	if player.detail.isPet then
@@ -715,7 +714,6 @@ local function AddGlobalUnit(detail, owner)
 		end
 		
 		Units[id] = unit
-		return unit
 	end
 	
 	return unit
@@ -810,12 +808,12 @@ local function CombatEventsHandler(info, statType, damageAction)
 	local amount = info[statType] or 0
 	
 	if info.owner then
-		VortexMeter.overallCombat:addPlayer(info.owner:GetId())
-		VortexMeter.CurrentCombat:addPlayer(info.owner:GetId())
+		VortexMeter.overallCombat:addPlayer(caster.owner)
+		VortexMeter.CurrentCombat:addPlayer(caster.owner)
 	end
 	
-	local overallCasterInCombat = VortexMeter.overallCombat:addPlayer(info.caster:GetId())
-	local casterInCombat = VortexMeter.CurrentCombat:addPlayer(info.caster:GetId())
+	local overallCasterInCombat = VortexMeter.overallCombat:addPlayer(caster)
+	local casterInCombat = VortexMeter.CurrentCombat:addPlayer(caster)
 	
 	-- Add stat to caster
 	local stat
@@ -848,8 +846,8 @@ local function CombatEventsHandler(info, statType, damageAction)
 	
 	-- Add targets equivalent damage/heal taken
 	if target then
-		local overallTargetInCombat = VortexMeter.overallCombat:addPlayer(info.target:GetId())
-		local targetInCombat = VortexMeter.CurrentCombat:addPlayer(info.target:GetId())
+		local overallTargetInCombat = VortexMeter.overallCombat:addPlayer(target)
+		local targetInCombat = VortexMeter.CurrentCombat:addPlayer(target)
 		
 		local taken
 		if damageAction then
