@@ -697,7 +697,7 @@ local function AddGlobalAbility(info)
 end
 
 local function AddGlobalUnit(detail, owner)
-	local id = detail:GetId()
+	local id = detail:GetId() or (owner and (owner:GetId().."pet")) or -1
 	local unit = Units[id]
 	if not unit then
 		unit = Unit:new(detail)
