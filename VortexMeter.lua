@@ -699,21 +699,18 @@ end
 local function AddGlobalUnit(detail, owner)
 	local id = detail:GetId() or (owner and (owner:GetId().."pet")) or -1
 	local unit = Units[id]
+	
 	if not unit then
 		unit = Unit:new(detail)
-		
-		-- search for pet owner if pet
-		if owner then -- friendly?
-			unit.isPet = true
-			unit.owner = AddGlobalUnit(owner, nil)
-			--unit.inGroup = unit.owner.inGroup
-		end
-		
-		if detail:IsThePlayer() then
-			unit.self = true
-		end
-		
+		if detail:IsThePlayer() then unit.self = true end
 		Units[id] = unit
+	end
+	
+	-- search for pet owner if pet
+	if owner then
+		unit.isPet = true
+		unit.owner = AddGlobalUnit(owner, nil)
+		--unit.inGroup = unit.owner.inGroup
 	end
 	
 	return unit
