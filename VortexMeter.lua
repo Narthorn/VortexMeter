@@ -1026,6 +1026,9 @@ function VortexMeter:DelayedInit()
 	Apollo.RegisterSlashCommand("vortex", "SlashHandler", self)
 	Apollo.RegisterSlashCommand("vortexmeter", "SlashHandler", self)
 	
+	-- Log other players (only the first time the addon is loaded)
+	if not self.settings.bSavedSettings then Apollo.SetConsoleVariable("cmbtlog.disableOtherPlayers", false) end
+	
 	-- Create update timer
 	self.timerPulse = ApolloTimer.Create(self.settings.updaterate, true, "Update", self)
 	self.timerPulse:Stop()
@@ -1045,6 +1048,7 @@ end
 
 function VortexMeter:OnSave(eType)
 	if eType ~= GameLib.CodeEnumAddonSaveLevel.Character then return end
+	self.settings.bSavedSettings = true
 	
 	return VortexMeter.deepcopy(self.settings)
 end
