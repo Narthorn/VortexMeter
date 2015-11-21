@@ -49,7 +49,6 @@ Mode.__index = Mode
 function Mode:new(name)
 	local self = {}
 	self.name = name
-	self.scrollOffset = 0
 	self.index = 0
 	return setmetatable(self, Mode)
 end
@@ -1521,7 +1520,7 @@ function Modes.abilities:update(window)
 	for i = 1, limit do
 		
 		-- total bar
-		if i == 1 and self.scrollOffset == 0 then
+		if i == 1 and window.scrollOffset == 0 then
 			tinsert(rows, {
 				leftLabel = "      " .. L["Total"],
 				rightLabel = NumberFormat(data.total),
