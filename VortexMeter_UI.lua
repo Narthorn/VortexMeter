@@ -563,6 +563,8 @@ function RM:OnReportCancel(wndHandler, wndControl, eMouseButton)
 	wndHandler:GetParent():GetParent():Destroy()
 end
 
+-- TODO Vim: the only hack here is the guy who wrote these two functions. Fix this mess. #6
+
 -- TODO: I really want to get this working with mousemove...
 function RM:OnWindowSizeChanged(wndHandler, wndControl)
 	local window = self.Windows[1]
