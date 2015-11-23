@@ -286,11 +286,25 @@ end
 function RM:OnHeaderButtonUp(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY)
 	local window = self.Windows[1]
 	
-	if eMouseButton == 1 then
-		window:setMode("modes")
-	elseif eMouseButton == 0 then
+	if eMouseButton == 0 then
 		window.pressed = false
 	end
+end
+
+function RM:OnHeaderTextButtonUp(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY)
+	local window = self.Windows[1]
+	
+	if eMouseButton == 1 then
+		window:setMode("modes")
+	end
+end
+
+function RM:OnHeaderTextMouseEnter(wndHandler, wndControl, x, y)
+	wndHandler:SetTextColor(ApolloColor.new(1, 1, 1, 1))
+end
+
+function RM:OnHeaderTextMouseExit(wndHandler, wndControl, x, y)
+	wndHandler:SetTextColor(ApolloColor.new(0.8, 0.8, 0.8, 1))
 end
 
 function RM:OnHeaderMouseMove(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY)
@@ -549,22 +563,6 @@ function RM:OnResizerButtonDown(wndHandler, wndControl, eMouseButton, nLastRelat
 	if math.abs(rows - #window.frames.rows) > 1 then
 		window:setRows(rows)
 		window.frames.base:SetAnchorOffsets(anchor[1], anchor[2], anchor[3], 45 + anchor[2] + (rows * (window.settings.rowHeight + 1)))
-	end
-end
-
-function RM:OnHeaderMouseEnter(wndHandler, wndControl, x, y)
-	local window = self.Windows[1]
-	
-	if wndHandler == wndControl then
-		window.frames.headerLabel:SetTextColor(ApolloColor.new(0.8, 0.8, 0.8, 1))
-	end
-end
-
-function RM:OnHeaderMouseExit(wndHandler, wndControl, x, y)
-	local window = self.Windows[1]
-	
-	if wndHandler == wndControl then
-		window.frames.headerLabel:SetTextColor(ApolloColor.new(1, 1, 1, 1))
 	end
 end
 
