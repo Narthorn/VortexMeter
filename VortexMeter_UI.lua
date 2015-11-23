@@ -155,23 +155,6 @@ local function RemoveOtherWindows()
 	end
 end
 
-local function Close(window)
-	if #Windows == 1 then
-		Print((L["Type /vm show to reactivate %s."]):format(Info.strName))
-		RM.Off()
-		return
-	end
-	
-	for i = 1, #Windows do
-		if window == Windows[i] then
-			Windows[i].frames.base:Show(false)
-			tremove(Windows, i)
-			tremove(RM.settings.windows, i)
-			return
-		end
-	end
-end
-
 local function GetClassColor(unit)
 	local calling
 	if unit.owner then
@@ -376,7 +359,7 @@ end
 function RM:OnButtonClose(wndHandler, wndControl, eMouseButton)
 	local window = self.Windows[1]
 	
-	Close(window)
+	RM.UI.Close(window)
 	
 	RM.Tooltip:hide()
 end
@@ -1637,6 +1620,23 @@ function RM.UI.NewWindow()
 	local settings = RM.GetDefaultWindowSettings()
 	tinsert(RM.settings.windows, settings)
 	tinsert(Windows, Window:new(settings))
+end
+
+function RM.UI.Close(window)
+	if #Windows == 1 then
+		Print((L["Type /vm show to reactivate %s."]):format(Info.strName))
+		RM.Off()
+		return
+	end
+	
+	for i = 1, #Windows do
+		if window == Windows[i] then
+			Windows[i].frames.base:Show(false)
+			tremove(Windows, i)
+			tremove(RM.settings.windows, i)
+			return
+		end
+	end
 end
 
 function RM.UI.Visible(visible)
