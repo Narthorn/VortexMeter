@@ -138,6 +138,8 @@ function Window:init()
 	window.frames.timerLabel = window.frames.base:FindChild("TimerLabel")
 	window.frames.globalStatLabel = window.frames.base:FindChild("GlobalStatLabel")
 
+	window.frames.base:SetData(self)
+
 	local bSolo = Apollo.GetConsoleVariable("cmbtlog.disableOtherPlayers")
 	window.frames.solo:SetTextColor(bSolo and "xkcdAcidGreen" or "xkcdBloodOrange")
 	
@@ -369,7 +371,7 @@ end
 -- Window Event Handlers
 
 function RM:OnHeaderButtonDown(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY)
-	local window = self.Windows[1]
+	local window = wndHandler:GetParent():GetData()
 	
 	if eMouseButton == 0 and not RM.settings.lock then
 		window.pressed = true
@@ -384,17 +386,15 @@ function RM:OnHeaderButtonDown(wndHandler, wndControl, eMouseButton, nLastRelati
 end
 
 function RM:OnHeaderButtonUp(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY)
-	local window = self.Windows[1]
-	
 	if eMouseButton == 0 then
+		local window = wndHandler:GetParent():GetData()
 		window.pressed = false
 	end
 end
 
 function RM:OnHeaderTextButtonUp(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY)
-	local window = self.Windows[1]
-	
 	if eMouseButton == 1 then
+		local window = wndHandler:GetParent():GetParent():GetData()
 		window:setMode("modes")
 	end
 end
@@ -408,7 +408,7 @@ function RM:OnHeaderTextMouseExit(wndHandler, wndControl, x, y)
 end
 
 function RM:OnHeaderMouseMove(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY)
-	local window = self.Windows[1]
+	local window = wndHandler:GetParent():GetData()
 	
 	if window.pressed then
 		local mouse = Apollo.GetMouse()
@@ -422,18 +422,16 @@ function RM:OnHeaderMouseMove(wndHandler, wndControl, eMouseButton, nLastRelativ
 end
 
 function RM:OnFrameMouseEnter(wndHandler, wndControl, x, y)
-	local window = self.Windows[1]
-	
 	if wndHandler == wndControl then
+		local window = wndHandler:GetData()
 		window.frames.header:SetOpacity(1)
 		window.frames.footer:SetOpacity(1)
 	end
 end
 
 function RM:OnFrameMouseExit(wndHandler, wndControl, x, y)
-	local window = self.Windows[1]
-	
 	if wndHandler == wndControl then
+		local window = wndHandler:GetData()
 		window.frames.header:SetOpacity(RM.settings.mousetransparancy)
 		window.frames.footer:SetOpacity(RM.settings.mousetransparancy)
 	end
@@ -444,7 +442,7 @@ function RM:OnButtonSolo(wndHandler, wndControl, eMouseButton, nLastRelativeMous
 end
 
 function RM:OnButtonClose(wndHandler, wndControl, eMouseButton)
-	local window = self.Windows[1]
+	local window = wndHandler:GetParent():GetParent():GetData()
 	
 	RM.UI.Close(window)
 	
@@ -468,13 +466,13 @@ function RM:OnButtonStop(wndHandler, wndControl, eMouseButton)
 end
 
 function RM:OnButtonPin(wndHandler, wndControl, eMouseButton)
-	local window = self.Windows[1]
+	local window = wndHandler:GetParent():GetParent():GetData()
 	
 	window:setMode("combat", RM.combats[#RM.combats])
 end
 
 function RM:OnButtonEnemies(wndHandler, wndControl, eMouseButton)
-	local window = self.Windows[1]
+	local window = wndHandler:GetParent():GetParent():GetData()
 	
 	window.frames.buttons.showPlayers:Show(true)
 	window.frames.buttons.showEnemies:Show(false)
@@ -483,7 +481,7 @@ function RM:OnButtonEnemies(wndHandler, wndControl, eMouseButton)
 end
 
 function RM:OnButtonPlayers(wndHandler, wndControl, eMouseButton)
-	local window = self.Windows[1]
+	local window = wndHandler:GetParent():GetParent():GetData()
 	
 	window.frames.buttons.showPlayers:Show(false)
 	window.frames.buttons.showEnemies:Show(true)
@@ -492,7 +490,7 @@ function RM:OnButtonPlayers(wndHandler, wndControl, eMouseButton)
 end
 
 function RM:OnRowButtonUp(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY)
-	local window = self.Windows[1]
+	local window = wndHandler:GetParent():GetParent():GetData()
 	
 	for i = 1, window.settings.rows do
 		local row = window.frames.rows[i]
@@ -509,7 +507,7 @@ function RM:OnRowButtonUp(wndHandler, wndControl, eMouseButton, nLastRelativeMou
 end
 
 function RM:OnBackgroundButtonUp(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY)
-	local window = self.Windows[1]
+	local window = wndHandler:GetParent():GetData()
 	
 	if eMouseButton == 1 then
 		window.selectedMode:rightClick(window)
@@ -521,7 +519,7 @@ function RM:OnBackgroundButtonUp(wndHandler, wndControl, eMouseButton, nLastRela
 end
 
 function RM:OnBackgroundScroll(wndHandler, wndControl, nLastRelativeMouseX, nLastRelativeMouseY, fScrollAmount, bConsumeMouseWheel)
-	local window = self.Windows[1]
+	local window = wndHandler:GetParent():GetData()
 	
 	local val = window.scrollOffset + ((fScrollAmount < 0) and 1 or -1)
 	val = max(0, min(val, window.rowCount - window.settings.rows))
@@ -534,8 +532,9 @@ function RM:OnBackgroundScroll(wndHandler, wndControl, nLastRelativeMouseX, nLas
 end
 
 function RM:OnButtonReport(wndHandler, wndControl, eMouseButton)
-	local window = self.Windows[1]
+	local window = wndHandler:GetParent():GetParent():GetData()
 	local wndReport = Apollo.LoadForm(RM.xmlMainDoc, "ReportForm", nil, RM)
+	wndReport:SetData(window)
 	wndReport:FindChild('ReportChannelEditBox'):SetText(RM.settings.report_channel or 's')
 	wndReport:FindChild('ReportTargetEditBox'):SetText(RM.settings.report_target or 'none')
 	wndReport:FindChild('ReportLinesEditBox'):SetText(RM.settings.report_lines or '5')
@@ -543,8 +542,8 @@ function RM:OnButtonReport(wndHandler, wndControl, eMouseButton)
 end
 
 function RM:OnReportConfirmButton(wndHandler, wndControl)
-	local window = self.Windows[1]
 	local wndReport = wndHandler:GetParent():GetParent()
+	local window = wndReport:GetData()
 	
 	RM.settings.report_channel = wndReport:FindChild('ReportChannelEditBox'):GetText()
 	RM.settings.report_target = wndReport:FindChild('ReportTargetEditBox'):GetText()
@@ -567,7 +566,7 @@ end
 
 -- TODO: I really want to get this working with mousemove...
 function RM:OnWindowSizeChanged(wndHandler, wndControl)
-	local window = self.Windows[1]
+	local window = wndHandler:GetParent():GetData()
 	
 	if window and wndControl == wndHandler and not window.resizing then
 		local mouse = Apollo.GetMouse()
@@ -598,7 +597,7 @@ end
 
 -- This is yet another hack to work around bugs caused by our SizeChanged on move hack...
 function RM:OnResizerButtonDown(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY, bDoubleClick, bStopPropagation)
-	local window = self.Windows[1]
+	local window = wndHandler:GetParent():GetParent():GetData()
 	
 	local mouse = Apollo.GetMouse()
 	local anchor = {window.frames.base:GetAnchorOffsets()}
@@ -611,7 +610,7 @@ function RM:OnResizerButtonDown(wndHandler, wndControl, eMouseButton, nLastRelat
 end
 
 function RM:OnButtonMouseEnter(wndHandler, wndControl, x, y)
-	local window = self.Windows[1]
+	local window = wndHandler:GetParent():GetParent():GetData()
 	
 	if wndControl == window.frames.buttons.close then
 		RM.Tooltip:show(L["Close"])
@@ -635,15 +634,13 @@ function RM:OnButtonMouseEnter(wndHandler, wndControl, x, y)
 end
 
 function RM:OnButtonMouseExit(wndHandler, wndControl, x, y)
-	local window = self.Windows[1]
-	
 	if wndHandler == wndControl then
 		RM.Tooltip:hide()
 	end
 end
 
 function RM:OnRowMouseEnter(wndHandler, wndControl, x, y)
-	local window = self.Windows[1]
+	local window = wndHandler:GetParent():GetParent():GetData()
 	
 	if wndHandler == wndControl then
 		for i = 1, window.settings.rows do
@@ -659,7 +656,7 @@ function RM:OnRowMouseEnter(wndHandler, wndControl, x, y)
 end
 
 function RM:OnRowMouseExit(wndHandler, wndControl, x, y)
-	local window = self.Windows[1]
+	local window = wndHandler:GetParent():GetParent():GetData()
 	
 	if wndHandler == wndControl then
 		for i = 1, window.settings.rows do
@@ -1310,6 +1307,7 @@ function RM.UI.NewWindow()
 	local settings = RM.GetDefaultWindowSettings()
 	tinsert(RM.settings.windows, settings)
 	tinsert(Windows, Window:new(settings))
+	RM.UI.Visible(true)
 end
 
 function RM.UI.Close(window)
@@ -1321,7 +1319,7 @@ function RM.UI.Close(window)
 	
 	for i = 1, #Windows do
 		if window == Windows[i] then
-			Windows[i].frames.base:Show(false)
+			Windows[i].frames.base:Destroy()
 			tremove(Windows, i)
 			tremove(RM.settings.windows, i)
 			return

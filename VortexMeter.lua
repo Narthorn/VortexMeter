@@ -930,6 +930,9 @@ local SlashCommands = setmetatable({
 	default = function ()
 		VortexMeter.UI.Default()
 	end,
+	new = function ()
+		VortexMeter.UI.NewWindow()
+	end,
 	lock = function ()
 		VortexMeter.settings.lock = true
 		VortexMeter.UI.ShowResizer(false)
