@@ -25,8 +25,10 @@ local ceil = math.ceil
 local round = function(val) return math.floor(val + .5) end
 
 local Dummy = function() end
+
 local Windows = {}
 RM.Windows = Windows
+
 local Modes = {}
 local Sortmodes = {
 	"damage",
@@ -38,22 +40,7 @@ local Sortmodes = {
 	"interrupts",
 }
 
-
-local Mode = {}
-Mode.__index = Mode
-function Mode:new(name)
-	local self = {}
-	self.name = name
-	self.index = 0
-	return setmetatable(self, Mode)
-end
-function Mode:rightClick() end
-function Mode:mouse4Click() end
-function Mode:mouse5Click() end
-function Mode:init() end
-function Mode:update() end
-function Mode:onSortmodeChange(window, newSortmode) return true end
-function Mode:getReportText() end
+-- Tooltips
 
 RM.Tooltip = { }
 function RM.Tooltip:init()
@@ -84,6 +71,8 @@ function RM.Tooltip:hide()
 	end
 	self.tooltip:Show(false)
 end
+
+-- Windows
 
 local Window = {}
 Window.__index = Window
@@ -159,6 +148,225 @@ function Window:init()
 	window.frames.header:SetOpacity(RM.settings.mousetransparancy)
 	window.frames.footer:SetOpacity(RM.settings.mousetransparancy)
 end
+
+function Window:clearRows(count) -- from count to rowCount will be hidden
+	self.scrollOffset = 0
+	
+	local rows = self.frames.rows
+	if not rows or count == #rows then return end
+	if not count then
+		count = 1
+	end
+	
+	for i = count, #rows do
+		local row = rows[i]
+		row.icon:Show(false)
+		row.leftLabel:SetText("")
+		row.rightLabel:SetText("")
+		row.base:Show(false)
+	end
+end
+function Window:update(useOldData)
+	if not useOldData then
+		self.lastData, self.rowCount, self.maxValue = self.selectedMode:update(self)
+	end
+	
+	self.lastData = self.lastData or {}
+	self.rowCount = self.rowCount or 0
+	self.maxValue = max(self.maxValue or 1, 1)
+	
+	local anchors = {self.frames.rows[1].base:GetAnchorOffsets()}
+	local maxRowWidth = anchors[3] - anchors[1]
+	for i = 1, self.settings.rows do
+		local row = self.frames.rows[i]
+		local data = self.lastData[i]
+		local rightClick
+		if data then
+			-- Default values
+			if not data.value then
+				data.value = 0
+			end
+			if not data.color then
+				data.color = {0, 0.5, 1}
+			end
+			if not data.leftLabel then
+				data.leftLabel = ""
+			end
+			if not data.rightLabel then
+				data.rightLabel = ""
+			end
+			if not data.leftClick then
+				data.leftClick = Dummy
+			end
+			if not data.middleClick then
+				data.middleClick = Dummy
+			end
+			if not data.rightClick then
+				rightClick = function() end --RM:OnBackgroundButtonUp(self, self, 1, 0, 0) end
+			else
+				rightClick = function() data.rightClick(self) end
+			end
+			if data.icon and data.icon ~= "" then
+				row.icon:SetSprite(data.icon)
+				row.icon:Show(true)
+			else
+				row.icon:Show(false)
+			end
+			
+			row.leftLabel:SetText(tostring(data.leftLabel))
+			row.rightLabel:SetText(tostring(data.rightLabel))
+			local anchor = {row.background:GetAnchorOffsets()}
+			row.background:SetAnchorOffsets(anchor[1], anchor[2], anchor[1] + max(min(maxRowWidth * data.value / self.maxValue, maxRowWidth), 0), anchor[4])
+			row.background:SetBGColor(ApolloColor.new(data.color[1], data.color[2], data.color[3], 1))
+			row.events.leftClick = data.leftClick
+			row.events.middleClick = data.middleClick
+			row.events.rightClick = rightClick
+			row.tooltip = data.tooltip
+			row.base:Show(true)
+		else
+			row.base:Show(false)
+		end
+	end
+end
+function Window.report(text)
+	if not text then return end
+	
+	local chan = RM.settings.report_channel
+	local target = RM.settings.report_target
+	
+	for i = 1, #text do
+		if ( chan == 'whisper' or chan == 'tell' or chan == 'w' or chan == 't' ) then
+			ChatSystemLib.Command("/" .. chan .. " " .. target .. " " .. text[i])
+		else
+			ChatSystemLib.Command("/" .. chan .. " " .. text[i])
+		end
+	end
+end
+function Window:setRows(count)
+	local forCount = count
+	local rowCount = 0
+	local rowpos = 1
+	
+	if self.frames.rows then
+		rowCount = #self.frames.rows
+		rowpos = 1 + rowCount * (self.settings.rowHeight + 1)
+	end
+	
+	if rowCount == count then
+		return
+	end
+	
+	count = max(count, 1)
+	self.settings.rows = count
+	
+	if self.frames.rows then
+		local diff = count - rowCount
+		if diff < 0 then -- remove row(s)
+			self:clearRows(count)
+			for i = count + 1, rowCount do
+				self.frames.obscured_rows[rowCount - i + count + 1] = tremove(self.frames.rows)
+			end
+			RM.data5 = self.frames.obscured_rows
+		elseif diff > 0 then -- add row(s)
+			self.scrollOffset = max(min(self.scrollOffset, self.rowCount - self.settings.rows), 0)
+		elseif diff == 0 then
+			forCount = 0
+		end
+	else
+		self.frames.rows = {}
+		self.frames.obscured_rows = {}
+	end
+	
+	for i = rowCount + 1, forCount do
+		self.frames.rows[i] = self.frames.obscured_rows[i]
+		
+		if not self.frames.rows[i] then
+			self.frames.rows[i] = { }
+			self.frames.rows[i].events = { }
+			self.frames.rows[i].base = Apollo.LoadForm(RM.xmlMainDoc, "Row", self.frames.background, RM)
+			self.frames.rows[i].background = self.frames.rows[i].base:FindChild("Background")
+			self.frames.rows[i].icon = self.frames.rows[i].base:FindChild("Icon")
+			self.frames.rows[i].rightLabel = self.frames.rows[i].base:FindChild("RightLabel")
+			self.frames.rows[i].leftLabel = self.frames.rows[i].base:FindChild("LeftLabel")
+			self.frames.rows[i].background:SetOpacity(0.7)
+		end
+			
+		local anchor = {self.frames.base:GetAnchorOffsets()}
+		self.frames.rows[i].base:SetAnchorOffsets(1, rowpos, anchor[3] - anchor[1] - 1, rowpos + self.settings.rowHeight)
+		rowpos = rowpos + self.settings.rowHeight + 1
+		self.frames.rows[i].base:Show(false)
+	end
+	
+	self.resizing = true
+	local anchor = {self.frames.base:GetAnchorOffsets()}
+	self.frames.base:SetAnchorOffsets(anchor[1], anchor[2], anchor[3], 45 + anchor[2] + (count * (self.settings.rowHeight + 1)))
+	self.resizing = false
+	
+	self:update()
+end
+function Window:timerUpdate(duration)
+	self.frames.timerLabel:SetText(FormatSeconds(duration))
+end
+function Window:setMode(mode, ...)
+	RM.Tooltip:hide()
+	
+	local newMode = {}
+	if type(mode) == "string" then
+		newMode = Modes[mode]
+	else
+		newMode = mode
+	end
+	
+	if newMode ~= self.selectedMode then -- prevent endless loop
+		tinsert(self.history, self.selectedMode)
+		self.selectedMode = newMode
+	end
+	
+	self:clearRows()
+	self.selectedMode:init(self, ...)
+	self:update()
+end
+function Window:getLastMode()
+	-- sortmode selection is skipped (Modes.modes)
+	-- two same modes can't be behind one another
+	
+	local index = #self.history
+	if self.history[index] == Modes.modes then
+		index = index - 1
+	end
+	if self.history[index] == self.selectedMode then
+		index = index - 1
+	end
+	
+	return self.history[max(index, 1)]
+end
+function Window:getCurrentMode()
+	return self.selectedMode
+end
+function Window:setTitle(title)
+	self.frames.headerLabel:SetText(tostring(title))
+end
+function Window:setGlobalLabel(text)
+	self.frames.globalStatLabel:SetText(NumberFormat(text))
+end
+function Window:setWidth(width)
+	self.frames.base:SetWidth(width)
+	self:update(true)
+end
+function Window:resize()
+	self.resizing = true
+	self.frames.base:SetAnchorOffsets(self.settings.x, self.settings.y, self.settings.x + self.settings.width, self.settings.y + 45 + (self.settings.rows * (self.settings.rowHeight + 1)))
+	self.resizing = false
+	
+	self:setRows(self.settings.rows)
+end
+function Window:showResizer(state)
+	self.frames.resizerLeft:Show(state)
+	self.frames.resizerRight:Show(state)
+	self.frames.base:SetStyle("Sizable", state)
+end
+
+-- Window Event Handlers
 
 function RM:OnHeaderButtonDown(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY)
 	local window = self.Windows[1]
@@ -494,222 +702,25 @@ function RM:OnRowMouseExit(wndHandler, wndControl, x, y)
 	end
 end
 
-function Window:clearRows(count) -- from count to rowCount will be hidden
-	self.scrollOffset = 0
-	
-	local rows = self.frames.rows
-	if not rows or count == #rows then return end
-	if not count then
-		count = 1
-	end
-	
-	for i = count, #rows do
-		local row = rows[i]
-		row.icon:Show(false)
-		row.leftLabel:SetText("")
-		row.rightLabel:SetText("")
-		row.base:Show(false)
-	end
+-- Modes
+
+local Mode = {}
+Mode.__index = Mode
+function Mode:new(name)
+	local self = {}
+	self.name = name
+	self.index = 0
+	return setmetatable(self, Mode)
 end
-function Window:update(useOldData)
-	if not useOldData then
-		self.lastData, self.rowCount, self.maxValue = self.selectedMode:update(self)
-	end
-	
-	self.lastData = self.lastData or {}
-	self.rowCount = self.rowCount or 0
-	self.maxValue = max(self.maxValue or 1, 1)
-	
-	local anchors = {self.frames.rows[1].base:GetAnchorOffsets()}
-	local maxRowWidth = anchors[3] - anchors[1]
-	for i = 1, self.settings.rows do
-		local row = self.frames.rows[i]
-		local data = self.lastData[i]
-		local rightClick
-		if data then
-			-- Default values
-			if not data.value then
-				data.value = 0
-			end
-			if not data.color then
-				data.color = {0, 0.5, 1}
-			end
-			if not data.leftLabel then
-				data.leftLabel = ""
-			end
-			if not data.rightLabel then
-				data.rightLabel = ""
-			end
-			if not data.leftClick then
-				data.leftClick = Dummy
-			end
-			if not data.middleClick then
-				data.middleClick = Dummy
-			end
-			if not data.rightClick then
-				rightClick = function() end --RM:OnBackgroundButtonUp(self, self, 1, 0, 0) end
-			else
-				rightClick = function() data.rightClick(self) end
-			end
-			if data.icon and data.icon ~= "" then
-				row.icon:SetSprite(data.icon)
-				row.icon:Show(true)
-			else
-				row.icon:Show(false)
-			end
-			
-			row.leftLabel:SetText(tostring(data.leftLabel))
-			row.rightLabel:SetText(tostring(data.rightLabel))
-			local anchor = {row.background:GetAnchorOffsets()}
-			row.background:SetAnchorOffsets(anchor[1], anchor[2], anchor[1] + max(min(maxRowWidth * data.value / self.maxValue, maxRowWidth), 0), anchor[4])
-			row.background:SetBGColor(ApolloColor.new(data.color[1], data.color[2], data.color[3], 1))
-			row.events.leftClick = data.leftClick
-			row.events.middleClick = data.middleClick
-			row.events.rightClick = rightClick
-			row.tooltip = data.tooltip
-			row.base:Show(true)
-		else
-			row.base:Show(false)
-		end
-	end
-end
-function Window.report(text)
-	if not text then return end
-	
-	local chan = RM.settings.report_channel
-	local target = RM.settings.report_target
-	
-	for i = 1, #text do
-		if ( chan == 'whisper' or chan == 'tell' or chan == 'w' or chan == 't' ) then
-			ChatSystemLib.Command("/" .. chan .. " " .. target .. " " .. text[i])
-		else
-			ChatSystemLib.Command("/" .. chan .. " " .. text[i])
-		end
-	end
-end
-function Window:setRows(count)
-	local forCount = count
-	local rowCount = 0
-	local rowpos = 1
-	
-	if self.frames.rows then
-		rowCount = #self.frames.rows
-		rowpos = 1 + rowCount * (self.settings.rowHeight + 1)
-	end
-	
-	if rowCount == count then
-		return
-	end
-	
-	count = max(count, 1)
-	self.settings.rows = count
-	
-	if self.frames.rows then
-		local diff = count - rowCount
-		if diff < 0 then -- remove row(s)
-			self:clearRows(count)
-			for i = count + 1, rowCount do
-				self.frames.obscured_rows[rowCount - i + count + 1] = tremove(self.frames.rows)
-			end
-			RM.data5 = self.frames.obscured_rows
-		elseif diff > 0 then -- add row(s)
-			self.scrollOffset = max(min(self.scrollOffset, self.rowCount - self.settings.rows), 0)
-		elseif diff == 0 then
-			forCount = 0
-		end
-	else
-		self.frames.rows = {}
-		self.frames.obscured_rows = {}
-	end
-	
-	for i = rowCount + 1, forCount do
-		self.frames.rows[i] = self.frames.obscured_rows[i]
-		
-		if not self.frames.rows[i] then
-			self.frames.rows[i] = { }
-			self.frames.rows[i].events = { }
-			self.frames.rows[i].base = Apollo.LoadForm(RM.xmlMainDoc, "Row", self.frames.background, RM)
-			self.frames.rows[i].background = self.frames.rows[i].base:FindChild("Background")
-			self.frames.rows[i].icon = self.frames.rows[i].base:FindChild("Icon")
-			self.frames.rows[i].rightLabel = self.frames.rows[i].base:FindChild("RightLabel")
-			self.frames.rows[i].leftLabel = self.frames.rows[i].base:FindChild("LeftLabel")
-			self.frames.rows[i].background:SetOpacity(0.7)
-		end
-			
-		local anchor = {self.frames.base:GetAnchorOffsets()}
-		self.frames.rows[i].base:SetAnchorOffsets(1, rowpos, anchor[3] - anchor[1] - 1, rowpos + self.settings.rowHeight)
-		rowpos = rowpos + self.settings.rowHeight + 1
-		self.frames.rows[i].base:Show(false)
-	end
-	
-	self.resizing = true
-	local anchor = {self.frames.base:GetAnchorOffsets()}
-	self.frames.base:SetAnchorOffsets(anchor[1], anchor[2], anchor[3], 45 + anchor[2] + (count * (self.settings.rowHeight + 1)))
-	self.resizing = false
-	
-	self:update()
-end
-function Window:timerUpdate(duration)
-	self.frames.timerLabel:SetText(FormatSeconds(duration))
-end
-function Window:setMode(mode, ...)
-	RM.Tooltip:hide()
-	
-	local newMode = {}
-	if type(mode) == "string" then
-		newMode = Modes[mode]
-	else
-		newMode = mode
-	end
-	
-	if newMode ~= self.selectedMode then -- prevent endless loop
-		tinsert(self.history, self.selectedMode)
-		self.selectedMode = newMode
-	end
-	
-	self:clearRows()
-	self.selectedMode:init(self, ...)
-	self:update()
-end
-function Window:getLastMode()
-	-- sortmode selection is skipped (Modes.modes)
-	-- two same modes can't be behind one another
-	
-	local index = #self.history
-	if self.history[index] == Modes.modes then
-		index = index - 1
-	end
-	if self.history[index] == self.selectedMode then
-		index = index - 1
-	end
-	
-	return self.history[max(index, 1)]
-end
-function Window:getCurrentMode()
-	return self.selectedMode
-end
-function Window:setTitle(title)
-	self.frames.headerLabel:SetText(tostring(title))
-end
-function Window:setGlobalLabel(text)
-	self.frames.globalStatLabel:SetText(NumberFormat(text))
-end
-function Window:setWidth(width)
-	self.frames.base:SetWidth(width)
-	self:update(true)
-end
-function Window:resize()
-	self.resizing = true
-	self.frames.base:SetAnchorOffsets(self.settings.x, self.settings.y, self.settings.x + self.settings.width, self.settings.y + 45 + (self.settings.rows * (self.settings.rowHeight + 1)))
-	self.resizing = false
-	
-	self:setRows(self.settings.rows)
-end
-function Window:showResizer(state)
-	self.frames.resizerLeft:Show(state)
-	self.frames.resizerRight:Show(state)
-	self.frames.base:SetStyle("Sizable", state)
-end
+function Mode:rightClick() end
+function Mode:mouse4Click() end
+function Mode:mouse5Click() end
+function Mode:init() end
+function Mode:update() end
+function Mode:onSortmodeChange(window, newSortmode) return true end
+function Mode:getReportText() end
+
+-- Mode: Sort Modes
 
 Modes.modes = Mode:new("modes")
 function Modes.modes:init(window)
@@ -740,6 +751,7 @@ function Modes.modes:update(window)
 	return rows, #Sortmodes, window.settings.width - 2
 end
 
+-- Mode: Combat
 
 Modes.combat = Mode:new("combat")
 function Modes.combat:init(window, combat)
@@ -852,6 +864,7 @@ function Modes.combat:mouse5Click(window)
 	end
 end
 
+-- Mode: Interactions
 
 Modes.interactions = Mode:new("interactions")
 function Modes.interactions:init(window, player)
@@ -907,6 +920,7 @@ function Modes.interactions:findOwner(window)
 	end
 end
 
+-- Mode: Interactions ability list
 
 Modes.interactionAbilities = Mode:new("interactionAbilities")
 function Modes.interactionAbilities:init(window, player, parent)
@@ -988,6 +1002,7 @@ function Modes.interactionAbilities:onSortmodeChange(window, oldSortmode)
 	return true
 end
 
+-- Mode: Interaction ability details
 
 Modes.interactionAbility = Mode:new("interactionAbility")
 function Modes.interactionAbility:init(window, ability)
@@ -1044,7 +1059,7 @@ function Modes.interactionAbility:onSortmodeChange(window, oldSortmode)
 	return true
 end
 
-
+-- Mode: Combat list
 
 Modes.combats = Mode:new("combats")
 function Modes.combats:init(window)
@@ -1083,8 +1098,7 @@ function Modes.combats:update(window)
 	return rows, #RM.combats, RM.GetMaxValueCombat(window.settings.sort, window.showEnemies)
 end
 
-
-
+-- Mode: Ability list
 
 Modes.abilities = Mode:new("abilities")
 function Modes.abilities:init(window, player)
@@ -1171,6 +1185,8 @@ function Modes.abilities:getReportText(window)
 	return text
 end
 
+-- Mode: Ability details
+
 Modes.ability = Mode:new("ability")
 function Modes.ability:init(window, ability)
 	if ability then
@@ -1226,10 +1242,7 @@ function Modes.ability:findOwner(window)
 	end
 end
 
-
-
-
-
+-- UI API
 
 RM.UI = { }
 
@@ -1271,6 +1284,7 @@ function RM.UI.NewCombat()
 		window.frames.buttons.combatEnd:Show(true)
 	end
 end
+
 function RM.UI.EndCombat()
 	for i, window in ipairs(Windows) do
 		window.frames.buttons.combatStart:Show(true)
