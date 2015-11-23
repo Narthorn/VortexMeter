@@ -241,7 +241,7 @@ function Unit:new(detail)
 	self.isPet = false
 	self.owner = nil
 	
-	self.calling = detail:GetClassId()
+	self.class = detail:GetClassId()
 	self.hostile = (GameLib.GetPlayerUnit():GetDispositionTo(detail) ~= ApolloUnit.CodeEnumDisposition.Friendly)
 	
 	return self

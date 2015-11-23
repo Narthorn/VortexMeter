@@ -946,7 +946,7 @@ function Modes.combat:update(window)
 		row.leftLabel = (RM.settings.showRankNumber and i + window.scrollOffset .. ". " or "") .. player.name
 		row.rightLabel = BuildFormat(NumberFormat(player.value), player.value / duration, player.value / max(data.total, 1) * 100)
 		
-		row.color = GetClassColor(player.ref.detail)
+		row.color = RM.settings.classColors[player.ref.detail.class] or {1, 1, 1}
 		row.value = player.value
 		row.tooltip = function()
 			return player.ref:getTooltip(window.settings.sort)
@@ -1060,7 +1060,7 @@ function Modes.filter:update(window)
 		row.leftLabel = (RM.settings.showRankNumber and i + window.scrollOffset .. ". " or "") .. player.name
 		row.rightLabel = BuildFormat(NumberFormat(player.value), player.value / duration, player.value / max(data.total, 1) * 100)
 		
-		row.color = GetClassColor(player.ref.detail)
+		row.color = RM.settings.classColors[player.ref.detail.class] or {1, 1, 1}
 		row.value = player.value
 		row.tooltip = function()
 			return player.ref:getTooltip(window.settings.sort)
@@ -1153,7 +1153,7 @@ function Modes.interactions:update(window)
 		
 		row.leftLabel = (RM.settings.showRankNumber and i + window.scrollOffset .. ". " or "") .. interaction.name
 		row.rightLabel = BuildFormat(NumberFormat(interaction.value), interaction.value / duration, interaction.value / data.total * 100)
-		row.color = GetClassColor(interaction.ref.detail)
+		row.color = RM.settings.classColors[interaction.ref.detail.class] or {1, 1, 1}
 		row.value = interaction.value
 		row.leftClick = function()
 			window:setMode("interactionAbilities", interaction.ref, window.selectedPlayer)
