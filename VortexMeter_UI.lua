@@ -140,6 +140,9 @@ function Window:init()
 	
 	window.frames.timerLabel = window.frames.base:FindChild("TimerLabel")
 	window.frames.globalStatLabel = window.frames.base:FindChild("GlobalStatLabel")
+
+	local bSolo = Apollo.GetConsoleVariable("cmbtlog.disableOtherPlayers")
+	window.frames.solo:SetTextColor(bSolo and "xkcdAcidGreen" or "xkcdBloodOrange")
 	
 	window.selectedMode:init(window)
 	window:resize()
@@ -439,17 +442,8 @@ function RM:OnFrameMouseExit(wndHandler, wndControl, x, y)
 	end
 end
 
-
-function RM:OnButtonSolo( wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY, bDoubleClick, bStopPropagation )
-	if Apollo.GetConsoleVariable("cmbtlog.disableOtherPlayers") then
-		local color = "xkcdBloodOrange"
-		Apollo.SetConsoleVariable("cmbtlog.disableOtherPlayers", false)
-		wndControl:SetTextColor(color)
-	else
-		local color = "xkcdAcidGreen"
-		Apollo.SetConsoleVariable("cmbtlog.disableOtherPlayers", true)
-		wndControl:SetTextColor(color)
-	end
+function RM:OnButtonSolo(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY, bDoubleClick, bStopPropagation )
+	RM.UI.Solo(not Apollo.GetConsoleVariable("cmbtlog.disableOtherPlayers"))
 end
 
 function RM:OnButtonClose(wndHandler, wndControl, eMouseButton)
@@ -1296,6 +1290,13 @@ function RM.UI.EndCombat()
 	end
 end
 
+function RM.UI.Solo(bDisabled)
+	Apollo.SetConsoleVariable("cmbtlog.disableOtherPlayers", bDisabled)
+	local color = bDisabled and "xkcdAcidGreen" or "xkcdBloodOrange"
+	for i, window in ipairs(Windows) do
+		window.frames.solo:SetTextColor(color)
+	end
+end
 
 function RM.UI.Default()
 	RM.Off()

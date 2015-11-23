@@ -210,7 +210,7 @@ function RM:OnConfigOnlyBossButton(wndHandler, wndControl, eMouseButton)
 end
 
 function RM:OnConfigLogOthersButton(wndHandler, wndControl, eMouseButton)
-	Apollo.SetConsoleVariable("cmbtlog.disableOtherPlayers", not wndHandler:IsChecked())
+	RM.UI.Solo(not wndHandler:IsChecked())
 end
 
 function RM:OnConfigPercentButton(wndHandler, wndControl, eMouseButton)
