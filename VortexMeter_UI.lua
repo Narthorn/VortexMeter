@@ -523,18 +523,11 @@ end
 function RM:OnBackgroundScroll(wndHandler, wndControl, nLastRelativeMouseX, nLastRelativeMouseY, fScrollAmount, bConsumeMouseWheel)
 	local window = self.Windows[1]
 	
-	if fScrollAmount > 0 then
-		local val = max(window.scrollOffset - 1, 0)
-		if val ~= window.scrollOffset then
-			window.scrollOffset = val
-			window:update()
-		end
-	else
-		local val = min(window.scrollOffset + 1, window.rowCount - window.settings.rows)
-		if val ~= window.scrollOffset and val > 0 then
-			window.scrollOffset = val
-			window:update()
-		end
+	local val = window.scrollOffset + ((fScrollAmount < 0) and 1 or -1)
+	val = max(0, min(val, window.rowCount - window.settings.rows))
+	if val ~= window.scrollOffset then
+		window.scrollOffset = val
+		window:update()
 	end
 	
 	return true
