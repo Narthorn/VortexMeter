@@ -225,7 +225,6 @@ function Window:new(settings)
 	self.rowCount = 0
 	self.scrollOffset = 0
 	self.showNpcs = false
-	self.isScrollbarPresent = false
 	self.selectedMode = Modes.combat
 	self.selectedSortmode = nil
 	self.selectedCombat = nil
@@ -286,10 +285,6 @@ function Window:init()
 	
 	window.frames.header:SetOpacity(RM.settings.mousetransparancy)
 	window.frames.footer:SetOpacity(RM.settings.mousetransparancy)
-	
-	if RM.settings.showScrollbar then
-		window:showScrollbar(true)
-	end
 end
 
 function RM:OnHeaderButtonDown(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY)
@@ -474,20 +469,12 @@ function RM:OnBackgroundScroll(wndHandler, wndControl, nLastRelativeMouseX, nLas
 		if val ~= window.scrollOffset then
 			window.scrollOffset = val
 			window:update()
-			
-			if window.isScrollbarPresent then
-				window.frames.scrollbar:SetPosition(window.scrollOffset)
-			end
 		end
 	else
 		local val = min(window.scrollOffset + 1, window.rowCount - window.settings.rows)
 		if val ~= window.scrollOffset and val > 0 then
 			window.scrollOffset = val
 			window:update()
-			
-			if window.isScrollbarPresent then
-				self.frames.scrollbar:SetPosition(window.scrollOffset)
-			end
 		end
 	end
 	
@@ -689,18 +676,6 @@ function Window:update(useOldData)
 	self.rowCount = self.rowCount or 0
 	self.maxValue = max(self.maxValue or 1, 1)
 	
-	if self.isScrollbarPresent then
-		local scrollbar = self.frames.scrollbar
-		local val = max(self.rowCount - self.settings.rows, 0)
-		if val == 0 then
-			scrollbar:SetEnabled(false)
-		else
-			scrollbar:SetEnabled(true)
-			scrollbar:SetRange(0, val)
-			scrollbar:SetPosition(self.scrollOffset) -- e.g. combats mode overrides scrollOffset
-		end
-	end
-	
 	local anchors = {self.frames.rows[1].base:GetAnchorOffsets()}
 	local maxRowWidth = anchors[3] - anchors[1]
 	for i = 1, self.settings.rows do
@@ -851,10 +826,6 @@ function Window:setMode(mode, ...)
 	self:clearRows()
 	self.selectedMode:init(self, ...)
 	self:update()
-	
-	if self.isScrollbarPresent and self.frames.scrollbar:GetEnabled() then
-		self.frames.scrollbar:SetPosition(self.scrollOffset)
-	end
 end
 function Window:getLastMode()
 	-- sortmode selection is skipped (Modes.modes)
@@ -895,50 +866,6 @@ function Window:showResizer(state)
 	self.frames.resizerRight:Show(state)
 	self.frames.base:SetStyle("Sizable", state)
 end
-
--- Remove or port this
-function Window:showScrollbar(state)
-	local window = self
-	if not self.frames.scrollbar and state then
-		self.frames.scrollbar = UI.CreateFrame("RiftScrollbar", "RM_scrollbar", self.frames.base)
-		self.frames.scrollbar:SetPoint("TOPRIGHT", self.frames.header, "BOTTOMRIGHT")
-		self.frames.scrollbar:SetPoint("BOTTOM", self.frames.footer, "TOP")
-		self.frames.scrollbar:SetOrientation("vertical")
-		self.frames.scrollbar:SetLayer(2)
-		self.frames.scrollbar:SetThickness(4)
-		
-		self.frames.scrollbar.Event.ScrollbarChange = function (self)
-			local val = round(window.frames.scrollbar:GetPosition())
-			if val ~= window.scrollOffset then
-				window.scrollOffset = val
-				window:update()
-			end
-		end
-	end
-	
-	if state then
-		self.frames.scrollbar:SetVisible(true)
-		if self.rowCount - self.settings.rows > 0 then
-			self.frames.scrollbar:SetRange(0, self.rowCount - self.settings.rows)
-			self.frames.scrollbar:SetPosition(self.scrollOffset)
-		end
-	else
-		self.frames.scrollbar:SetVisible(false)
-	end
-	
-	for i, row in ipairs(self.frames.rows) do
-		if RM.settings.showScrollbar then
-			row.base:SetPoint("RIGHT", self.frames.scrollbar, "LEFT")
-		else
-			row.base:SetPoint("RIGHT", self.frames.background, "RIGHT", -1, nil)
-		end
-	end
-	
-	self.isScrollbarPresent = state
-	
-	self:update(true)
-end
-
 
 Modes.modes = Mode:new("modes")
 function Modes.modes:init(window)
@@ -1742,10 +1669,5 @@ end
 function RM.UI.ShowResizer(state)
 	for i, window in ipairs(Windows) do
 		window:showResizer(state)
-	end
-end
-function RM.UI.ShowScrollbar(state)
-	for i, window in ipairs(Windows) do
-		window:showScrollbar(state)
 	end
 end

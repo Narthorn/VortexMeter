@@ -57,7 +57,6 @@ VortexMeter.settings = {
 	lock = false,
 	alwaysShowPlayer = false,
 	showOnlyBoss = false,
-	showScrollbar = false,
 	showRankNumber = true,
 	showPercent = true,
 	showAbsolute = true,
