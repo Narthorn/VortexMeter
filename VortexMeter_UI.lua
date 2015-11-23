@@ -135,9 +135,6 @@ function Window:init()
 	window.frames.resizerLeft = window.frames.base:FindChild("ResizeLeft")
 	window.frames.resizerRight = window.frames.base:FindChild("ResizeRight")
 	
-	window.frames.reportform = Apollo.LoadForm(RM.xmlMainDoc, "ReportForm", nil, RM)
-	window.frames.reportform:Show(false)
-	
 	window.frames.timerLabel = window.frames.base:FindChild("TimerLabel")
 	window.frames.globalStatLabel = window.frames.base:FindChild("GlobalStatLabel")
 
@@ -545,47 +542,32 @@ end
 
 function RM:OnButtonReport(wndHandler, wndControl, eMouseButton)
 	local window = self.Windows[1]
-	local chan = window.frames.reportform:FindChild('ReportChannelEditBox')
-	local target = window.frames.reportform:FindChild('ReportTargetEditBox')
-	local lines = window.frames.reportform:FindChild('ReportLinesEditBox')
-	if RM.settings.report_channel == nil then
-		RM.settings.report_channel = "s"
-	end
-	if RM.settings.report_target == nil then
-		RM.settings.report_target = "none"
-	end
-	if RM.settings.report_lines == nil then
-		RM.settings.report_lines = "5"
-	end
-	chan:SetText(RM.settings.report_channel)
-	target:SetText(RM.settings.report_target)
-	lines:SetText(RM.settings.report_lines)
-	window.frames.reportform:Show(true)
+	local wndReport = Apollo.LoadForm(RM.xmlMainDoc, "ReportForm", nil, RM)
+	wndReport:FindChild('ReportChannelEditBox'):SetText(RM.settings.report_channel or 's')
+	wndReport:FindChild('ReportTargetEditBox'):SetText(RM.settings.report_target or 'none')
+	wndReport:FindChild('ReportLinesEditBox'):SetText(RM.settings.report_lines or '5')
+	wndReport:Show(true)
 end
 
-function RM:OnReportConfirmButton(wndHandler, wndControl, fNewValue, fOldValue)
+function RM:OnReportConfirmButton(wndHandler, wndControl)
 	local window = self.Windows[1]
-	local selectedMode = window.selectedMode
-	if not selectedMode then
-		selectedMode = Modes.interactionAbilities
-	end
+	local wndReport = wndHandler:GetParent():GetParent()
 	
-	local chan = window.frames.reportform:FindChild('ReportChannelEditBox'):GetText()
-	local target = window.frames.reportform:FindChild('ReportTargetEditBox'):GetText()
-	local lines = window.frames.reportform:FindChild('ReportLinesEditBox'):GetText()
+	RM.settings.report_channel = wndReport:FindChild('ReportChannelEditBox'):GetText()
+	RM.settings.report_target = wndReport:FindChild('ReportTargetEditBox'):GetText()
+	RM.settings.report_lines = tonumber(wndReport:FindChild('ReportLinesEditBox'):GetText())
 	
-	RM.settings.report_channel = chan
-	RM.settings.report_target = target
-	RM.settings.report_lines = tonumber(lines)
-	
-	local text = selectedMode:getReportText(window)
-	window.frames.reportform:Show(false)
-	window.report(text)
+	wndReport:Destroy()
+
+	local selectedMode = window.selectedMode or Modes.interactionAbilities
+	window.report(selectedMode:getReportText(window))
 end
 
 function RM:OnReportClose(wndHandler, wndControl, eMouseButton)
-	local window = self.Windows[1]
-	window.frames.reportform:Show(false)
+	wndHandler:GetParent():Destroy()
+end
+function RM:OnReportCancel(wndHandler, wndControl, eMouseButton)
+	wndHandler:GetParent():GetParent():Destroy()
 end
 
 -- TODO: I really want to get this working with mousemove...

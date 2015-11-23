@@ -297,7 +297,7 @@
 				<Event Name="ButtonSignal" Function="OnReportConfirmButton"/>
 			</Control>
 			<Control Class="Button" Base="BK3:btnHolo_Blue_Med" Font="CRB_Button" ButtonType="PushButton" RadioGroup="" LAnchorPoint="0" LAnchorOffset="238" TAnchorPoint="1" TAnchorOffset="-43" RAnchorPoint="0" RAnchorOffset="358" BAnchorPoint="1" BAnchorOffset="12" DT_VCENTER="1" DT_CENTER="1" Name="ReportButton" BGColor="ffffffff" TextColor="ff4dffff" NormalTextColor="UI_BtnTextBlueNormal" PressedTextColor="UI_BtnTextBluePressed" FlybyTextColor="UI_BtnTextBlueFlyby" PressedFlybyTextColor="UI_BtnTextBluePressedFlyby" WindowSoundTemplate="PushbuttonDigi03" TextId="" DisabledTextColor="UI_BtnTextBlueDisabled" TooltipColor="" Text="Cancel">
-				<Event Name="ButtonSignal" Function="OnReportClose"/>
+				<Event Name="ButtonSignal" Function="OnReportCancel"/>
 			</Control>
 		</Control>
 		<Control Class="Window" LAnchorPoint="0" LAnchorOffset="60" TAnchorPoint="1" TAnchorOffset="-230" RAnchorPoint="1" RAnchorOffset="-60" BAnchorPoint="1" BAnchorOffset="-163" RelativeToClient="1" Font="CRB_Interface14_O" Template="Default" Name="ReportTitle" BGColor="ffffffff" TextColor="UI_WindowTitleYellow" DT_CENTER="1" DT_VCENTER="1" DT_WORDBREAK="1" TextId="" TooltipColor="" Text="VortexMeter: Battle Report" Tooltip=""/>
