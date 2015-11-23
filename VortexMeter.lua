@@ -859,33 +859,6 @@ local function CombatEventsHandler(info, statType, damageAction)
 	end
 end
 
--- TODO: This is for tracking mob deaths for EndCombatAfterKill and NewCombatAfterKill, don't need yet
--- TODO: Add death log
---function Events.Death(info)
---	if not InCombat or StopTracking or not info.target then
---		return
---	end
---	
---	local detail = InspectUnitDetail(info.target)
---	if not detail or not detail.type then
---		return
---	end
---	for i, type in ipairs(EndCombatAfterKill) do
---		if type == detail.type then
---			EndCombat()
---			StopTracking = true
---			InCombat = true
---			return
---		end
---	end
---	for i, type in ipairs(NewCombatAfterKill) do
---		if type == detail.type then
---			EndCombat()
---			return
---		end
---	end
---end
-
 local function On()
 	if VortexMeter.settings.enabled then return end
 	VortexMeter.settings.enabled = true

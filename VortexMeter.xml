@@ -71,9 +71,6 @@
 				<Event Name="MouseButtonDown" Function="OnSolo"/>
 				<Event Name="MouseButtonDown" Function="OnButtonSolo"/>
 			</Control>
-			<Control Class="EditBox" LAnchorPoint="0" LAnchorOffset="205" TAnchorPoint="0" TAnchorOffset="-2" RAnchorPoint="0" RAnchorOffset="250" BAnchorPoint="0" BAnchorOffset="21" RelativeToClient="1" Font="CRB_Header9_O" Text="FILTER" BGColor="UI_WindowBGDefault" TextColor="xkcdBloodOrange" Template="Default" TooltipType="OnCursor" Name="btnFilter" TooltipColor="" TextId="" DT_VCENTER="1" DT_CENTER="0" ReadOnly="1" DT_RIGHT="1" Visible="0" HideInEditor="1">
-				<Event Name="MouseButtonDown" Function="OnButtonFilter"/>
-			</Control>
 		</Control>
 		<Control Class="Window" LAnchorPoint="0" LAnchorOffset="0" TAnchorPoint="0" TAnchorOffset="0" RAnchorPoint="1" RAnchorOffset="0" BAnchorPoint="1" BAnchorOffset="0" RelativeToClient="1" Font="CRB_Interface9" Text="" BGColor="00000000" TextColor="00000000" Template="Default" TooltipType="OnCursor" Name="ResizeLeaf" TooltipColor="" UseParentOpacity="0" IgnoreMouse="1" Visible="1" Picture="1" NewWindowDepth="1" AutoFadeNC="0" UseTemplateBG="0" UseRadialClipping="0" Sprite="" Escapable="0" Overlapped="0" Moveable="0" Sizable="0" Border="0" TestAlpha="0" NoClip="0" VScroll="0" AutoHideScroll="0">
 			<Event Name="WindowSizeChanged" Function="OnWindowSizeChanged"/>

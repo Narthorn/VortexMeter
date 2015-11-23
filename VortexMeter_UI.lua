@@ -6,15 +6,11 @@
 -- TODO: Tidy
 
 local RM = Apollo.GetAddon("VortexMeter")
-local Info = Apollo.GetAddonInfo("VortexMeter")
-RM.UI = { }
 
 local L = RM.l
 local NumberFormat = RM.numberFormat
 local FormatSeconds = RM.formatSeconds
 local BuildFormat = RM.BuildFormat
-
-local UI = UI
 
 local pairs = pairs
 local ipairs = ipairs
@@ -29,11 +25,9 @@ local ceil = math.ceil
 local round = function(val) return math.floor(val + .5) end
 
 local Dummy = function() end
-local AsyncRowHoverEventHelper = 0 -- e.g. mousein, mousein, mouseout :(
 local Windows = {}
 RM.Windows = Windows
 local Modes = {}
---local Sortmodes = {}
 local Sortmodes = {
 	"damage",
 	"heal",
@@ -60,59 +54,6 @@ function Mode:init() end
 function Mode:update() end
 function Mode:onSortmodeChange(window, newSortmode) return true end
 function Mode:getReportText() end
-
-local Sortmode = {}
-Sortmode.__index = Sortmode
-function Sortmode:new()
-	local self = {}
-	
-	return setmetatable(self, Sortmode)
-end
-function Sortmode:isCompatibleWith(mode) return false end
-function Sortmode:getData(mode) return {} end
-
-
-local Dialog = {}
-function Dialog:init()
-	self.dialog = UI.CreateFrame("Frame", "RM_dialog", Context)
-	self.dialog:SetVisible(false)
-	self.dialog:SetWidth(350)
-	self.dialog:SetHeight(100)
-	self.dialog:SetBackgroundColor(0, 0, 0, .9)
-	self.dialog:SetPoint("CENTER", UIParent, "CENTER", 0, -120)
-	
-	self.dialogText = UI.CreateFrame("Text", "RM_dialogText", self.dialog)
-	self.dialogText:SetFontSize(14)
-	self.dialogText:SetPoint("TOPCENTER", self.dialog, "TOPCENTER", 0, 15)
-	
-	self.dialogButtonYes = UI.CreateFrame("RiftButton", "RM_dialogButtonYes", self.dialog)
-	self.dialogButtonYes:SetText("Yes")
-	self.dialogButtonYes:SetPoint("BOTTOMLEFT", self.dialog, "BOTTOMLEFT", 20, -5)
-	
-	self.dialogButtonNo = UI.CreateFrame("RiftButton", "RM_dialogButtonNo", self.dialog)
-	self.dialogButtonNo:SetText("No")
-	self.dialogButtonNo:SetPoint("BOTTOMRIGHT", self.dialog, "BOTTOMRIGHT", -20, -5)
-end
-function Dialog:show(text, yesLabel, noLabel, yesCallback, noCallback)
-	if not self.dialog then
-		self:init()
-	end
-	local dialog = self.dialog
-	
-	dialog:SetVisible(true)
-	self.dialogText:SetText(text)
-	self.dialogButtonYes:SetText(yesLabel)
-	self.dialogButtonNo:SetText(noLabel)
-	
-	function self.dialogButtonYes.Event:LeftPress()
-		dialog:SetVisible(false)
-		yesCallback()
-	end
-	function self.dialogButtonNo.Event:LeftPress()
-		dialog:SetVisible(false)
-		noCallback()
-	end
-end
 
 RM.Tooltip = { }
 function RM.Tooltip:init()
@@ -143,37 +84,6 @@ function RM.Tooltip:hide()
 	end
 	self.tooltip:Show(false)
 end
-
-
-
-
-local function RemoveOtherWindows()
-	while #Windows > 1 do
-		Windows[#Windows].frames.base:Destroy()
-		tremove(Windows, #Windows)
-		tremove(RM.settings.windows, #Windows)
-	end
-end
-
-local function GetClassColor(unit)
-	local calling
-	if unit.owner then
-		calling = unit.owner.calling -- pet has no calling -> get pet owner's calling
-	else
-		calling = unit.calling
-	end
-	
-	if calling then
-		return RM.settings.classColors[calling]
-	else
-		return {1, 1, 1}
-	end
-end
-
-
-
-
-
 
 local Window = {}
 Window.__index = Window
@@ -230,7 +140,6 @@ function Window:init()
 	window.frames.resizeLeaf = window.frames.base:FindChild("ResizeLeaf")
 	window.frames.footer = window.frames.base:FindChild("Footer")
 	window.frames.solo = window.frames.footer:FindChild("btnSolo")
-	window.frames.filter = window.frames.footer:FindChild("btnFilter")
 	window.frames.copyField = window.frames.base:FindChild("CopyField")
 	window.frames.copyBackground = window.frames.base:FindChild("CopyBackground")
 	
@@ -322,27 +231,6 @@ function RM:OnFrameMouseExit(wndHandler, wndControl, x, y)
 	end
 end
 
-function RM:OnButtonFilter( wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY, bDoubleClick, bStopPropagation )
-	local window = self.Windows[1]
-	
-	if RM.FilterOn then
-		local color = "xkcdBloodOrange"
-		wndControl:SetTextColor(color)
-		RM.FilterOn = false
-	else
-		local color = "xkcdAcidGreen"
-		wndControl:SetTextColor(color)
-		RM.FilterOn = true
-		
-		if window.selectedCombat then
-			window:setMode("targets")
-		else
-			window:setMode("combats")
-		end
-		-- Open up window with mobs we have fought
-		-- Pick a mob, and go back to normal dmg window, but only with dmg to that mob
-	end
-end
 
 function RM:OnButtonSolo( wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY, bDoubleClick, bStopPropagation )
 	if Apollo.GetConsoleVariable("cmbtlog.disableOtherPlayers") then
@@ -362,12 +250,6 @@ function RM:OnButtonClose(wndHandler, wndControl, eMouseButton)
 	RM.UI.Close(window)
 	
 	RM.Tooltip:hide()
-end
-
-function RM:OnButtonCopy(wndHandler, wndControl, eMouseButton)
-	local window = self.Windows[1]
-	
-	window:report()
 end
 
 function RM:OnButtonConfig(wndHandler, wndControl, eMouseButton)
@@ -971,121 +853,6 @@ function Modes.combat:mouse5Click(window)
 end
 
 
--- FILTER STARTS HERE --
-
-Modes.filter = Mode:new("filter")
-function Modes.filter:init(window, combat)
-	if combat then
-		window.selectedCombat = combat
-	end
-	
-	if not window.selectedCombat then
-		if #RM.combats > 0 then
-			window.selectedCombat = RM.combats[#RM.combats]
-		end
-	end
-	
-	if window.selectedCombat then
-		window:timerUpdate(window.selectedCombat.duration)
-	end
-	window:setTitle(L[window.settings.sort])
-end
-function Modes.filter:update(window)
-	if not window.selectedCombat then return end -- Update() is called on init
-	
-	local data = window.selectedCombat:getPreparedPlayerData(window.settings.sort, window.showEnemies)
-	
-	local rows = {}
-	local selfFound = false
-	local limit = min(data.count, window.settings.rows)
-	local duration = max(window.selectedCombat.duration, 1)
-	for i = 1, limit do
-		local row = {}
-		local player = data.players[i + window.scrollOffset]
-		
-		if RM.settings.alwaysShowPlayer then
-			if player.ref.detail.self then
-				selfFound = true
-			end
-			
-			if i == limit and not selfFound then
-				for j = i + window.scrollOffset, data.count do
-					if data.players[j].ref.detail.self then
-						player = data.players[j]
-						i = j - window.scrollOffset
-						break
-					end
-				end
-			end
-		end
-		
-		row.leftLabel = (RM.settings.showRankNumber and i + window.scrollOffset .. ". " or "") .. player.name
-		row.rightLabel = BuildFormat(NumberFormat(player.value), player.value / duration, player.value / max(data.total, 1) * 100)
-		
-		row.color = RM.settings.classColors[player.ref.detail.class] or {1, 1, 1}
-		row.value = player.value
-		row.tooltip = function()
-			return player.ref:getTooltip(window.settings.sort)
-		end
-		row.leftClick = function()
-			window:setMode("abilities", player.ref)
-		end
-		if player.ref.interactions then
-			row.middleClick = function()
-				window:setMode("interactions", player.ref)
-			end
-		end
-		
-		tinsert(rows, row)
-	end
-	
-	window:setGlobalLabel(data.total / duration)
-	
-	return rows, data.count, data.max
-end
-function Modes.filter:rightClick(window)
-	if #RM.combats > 0 then
-		window:setMode("targets")
-	end
-end
-function Modes.filter:getReportText(window)
-	if not window.selectedCombat then return end
-	
-	local data = window.selectedCombat:getPreparedPlayerData(window.settings.sort, window.showEnemies)
-	local duration = max(window.selectedCombat.duration, 1)
-	local text = {}
-	tinsert(text, ("Target: %s ~ (%s)"):format(window.selectedCombat:getHostile():sub(0, 64), FormatSeconds(window.selectedCombat.duration)))
-	tinsert(text, ("--------------------"))
-	tinsert(text, ("Total %s: %s ~ (%s)"):format( window.settings.sort, NumberFormat(data.total), NumberFormat(data.total / duration) ))
-	for i = 1, min( data.count, RM.settings.report_lines ) do
-		local player = data.players[i]
-		if not player.ref.detail.isPet then
-			tinsert(text, ("%d) %s - %s (%s, %d%%) "):format( i, player.ref.detail.name:sub(0, 32), NumberFormat(player.value), NumberFormat(player.value / duration), round(player.value / data.total * 100, 2)))
-		end
-	end
-	
-	return text
-end
-
-function Modes.filter:mouse4Click(window)
-	for i, combat in ipairs(RM.combats) do
-		if combat == window.selectedCombat and i > 1 then
-			window:setMode("targets", RM.combats[i - 1])
-			return
-		end
-	end
-end
-function Modes.filter:mouse5Click(window)
-	for i, combat in ipairs(RM.combats) do
-		if combat == window.selectedCombat and i < #RM.combats then
-			window:setMode("targets", RM.combats[i + 1])
-			return
-		end
-	end
-end
-
-
-
 Modes.interactions = Mode:new("interactions")
 function Modes.interactions:init(window, player)
 	if player then
@@ -1281,12 +1048,6 @@ end
 
 Modes.combats = Mode:new("combats")
 function Modes.combats:init(window)
---	local val = max(RowCount - RM.settings.rows, 0) -- RowCount is an old value. last combat count
---	RowCount = #RM.combats -- now update
---	if self.scrollOffset == val or self.scrollOffset == 0 then -- dont scroll back to the last combats if the user is already in combats selection mode and a new combat started
---		self.scrollOffset = max(RowCount - RM.settings.rows, 0) -- set offset to the current combat
---	end
-	
 	window.rowCount = #RM.combats
 	window.scrollOffset = max(window.rowCount - window.settings.rows, 0)
 	window:setTitle(L["Combats"] .. ": " .. L[window.settings.sort])
@@ -1308,7 +1069,7 @@ function Modes.combats:update(window)
 			row.leftLabel = FormatSeconds(combat.duration) .. " " .. hostile
 			row.rightLabel = NumberFormat(floor(stat))
 			row.value = stat
-		-- SEARCH FILTERONFUNCTION
+
 			row.leftClick = function()
 			window:setMode("combat", RM.combats[i + window.scrollOffset]) end
 			
@@ -1323,64 +1084,6 @@ function Modes.combats:update(window)
 end
 
 
--- ## FILTER TARGETS ##
-
-Modes.targets = Mode:new("targets")
-function Modes.targets:init(window)
---	local val = max(RowCount - RM.settings.rows, 0) -- RowCount is an old value. last combat count
---	RowCount = #RM.combats -- now update
---	if self.scrollOffset == val or self.scrollOffset == 0 then -- dont scroll back to the last combats if the user is already in combats selection mode and a new combat started
---		self.scrollOffset = max(RowCount - RM.settings.rows, 0) -- set offset to the current combat
---	end
-	
-	window.rowCount = #RM.combats
-	window.scrollOffset = max(window.rowCount - window.settings.rows, 0)
-	window:setTitle(L["Targets"] .. ": FilterMode")
-end
-function Modes.targets:update(window)
-	if not window.selectedCombat then return end -- Update() is called on init
-	
-	--local data = window.selectedCombat:getPreparedPlayerData(window.settings.sort, window.showEnemies)
-	local data = window.selectedCombat:getHostile()
-	Print("Player is nil???: " .. data[i + window.scrollOffset])
-	
-	local rows = {}
-	local limit = min(data.count)
-	local duration = max(window.selectedCombat.duration, 1)
-	local hostiles = {}
-	
-	--for i = 1, limit do
-		--local player = data.players[i + window.scrollOffset]
-				
-		--local tmpData = player:getInteractions(window.settings.sort)
-		
-		--for i = 1, min(tmpData.count) do
-			--local interaction = tmpData.interactions[i + window.scrollOffset]
-			--tinsert(hostiles, interaction)
-		--end
-	--end
-	if test == "22" then
-		limit = min(data.count, window.settings.rows)
-		for i = i, limit do
-			local row = {}
-			local hostile = hostiles[i + window.scrollOffset]
-	
-			row.leftLabel = (RM.settings.showRankNumber and i + window.scrollOffset .. ". " or "") .. hostile.name
-			--row.rightLabel = BuildFormat(NumberFormat(player.value), player.value / duration, player.value / data.total * 100)
-			row.color = GetClassColor(hostile.ref.detail)
-			row.value = hostile.value
-			row.leftClick = function()
-				--window:setMode("interactionAbilities", player.ref, window.selectedPlayer)
-			end
-	
-			tinsert(rows, row)
-		end
-	end
-	
-	window:setGlobalLabel(data.total / duration)
-	
-	return rows, data.count, data.max
-end
 
 
 Modes.abilities = Mode:new("abilities")
@@ -1528,12 +1231,7 @@ end
 
 
 
-
-function RM.UI.NewSortmode()
-	local sortmode = Sortmode:new()
-	tinsert(Sortmodes, sortmode)
-	return sortmode
-end
+RM.UI = { }
 
 function RM.UI.Update()
 	for i, window in ipairs(Windows) do
@@ -1624,7 +1322,7 @@ end
 
 function RM.UI.Close(window)
 	if #Windows == 1 then
-		Print((L["Type /vm show to reactivate %s."]):format(Info.strName))
+		Print((L["Type /vm show to reactivate %s."]):format(RM.name))
 		RM.Off()
 		return
 	end
