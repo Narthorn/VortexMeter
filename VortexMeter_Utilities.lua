@@ -30,6 +30,26 @@ function VortexMeter.numberFormat(num)
 	end
 end
 
+function VortexMeter.BuildFormat(absolute, perSecond, percent)
+	local args = {}
+	local format = ""
+	if VortexMeter.settings.showAbsolute then
+		tinsert(args, absolute)
+		format = format .. "%s" .. (VortexMeter.settings.showPercent and " (" or ", ") .. "%s"
+	else
+		format = format .. "%s"
+	end
+	
+	tinsert(args, VortexMeter.numberFormat(perSecond))
+	
+	if VortexMeter.settings.showPercent then
+		tinsert(args, percent)
+		format = format .. (VortexMeter.settings.showAbsolute and ", " or " ") .. (not VortexMeter.settings.showAbsolute and "(" or "") .. "%.1f%%)"
+	end
+	
+	return format:format(unpack(args))
+end
+
 function VortexMeter.colorize(text, fromHex, toHex)
 	local colored = {}
 	local len = text:len() - 1

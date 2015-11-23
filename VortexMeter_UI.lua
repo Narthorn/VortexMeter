@@ -12,6 +12,7 @@ RM.UI = { }
 local L = RM.l
 local NumberFormat = RM.numberFormat
 local FormatSeconds = RM.formatSeconds
+local BuildFormat = RM.BuildFormat
 
 local UI = UI
 
@@ -184,26 +185,6 @@ local function GetClassColor(unit)
 	else
 		return {1, 1, 1}
 	end
-end
-
-local function BuildFormat(absolute, perSecond, percent)
-	local args = {}
-	local format = ""
-	if RM.settings.showAbsolute then
-		tinsert(args, absolute)
-		format = format .. "%s" .. (RM.settings.showPercent and " (" or ", ") .. "%s"
-	else
-		format = format .. "%s"
-	end
-	
-	tinsert(args, RM.numberFormat(perSecond))
-	
-	if RM.settings.showPercent then
-		tinsert(args, percent)
-		format = format .. (RM.settings.showAbsolute and ", " or " ") .. (not RM.settings.showAbsolute and "(" or "") .. "%.1f%%)"
-	end
-	
-	return format:format(unpack(args))
 end
 
 
