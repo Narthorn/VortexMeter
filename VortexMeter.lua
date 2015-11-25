@@ -3,7 +3,7 @@
 --- Maintained by Vim <Codex>
 --- Original addon : Rift Meter by Vince (http://www.curse.com/addons/rift/rift-meter)
 
-local VortexMeter = {
+VortexMeter = {
 	name = "VortexMeter",
 	version = {1,3,5},
 	combats = {},
@@ -20,6 +20,7 @@ local max = math.max
 local min = math.min
 local round = function(val) return math.floor(val + .5) end
 local setmetatable = setmetatable
+local VortexMeter = VortexMeter
 
 local Event = Event
 
