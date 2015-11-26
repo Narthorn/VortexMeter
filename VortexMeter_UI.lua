@@ -138,6 +138,7 @@ function Window:init()
 
 	self.frames.base:SetData(self)
 	self.frames.base:SetAnchorOffsets(self.settings.x, self.settings.y, self.settings.x + self.settings.width, 0)
+	self.frames.base:SetSizingMinimum(140)
 	self:setRows(self.settings.rows)
 
 	local bSolo = Apollo.GetConsoleVariable("cmbtlog.disableOtherPlayers")
