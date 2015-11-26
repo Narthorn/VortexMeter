@@ -80,7 +80,6 @@ function Window:new(settings)
 	local self = {}
 	
 	self.settings = settings
-	self.resizing = false
 	self.frames = {}
 	self.lastData = {}
 	self.history = {}
@@ -126,7 +125,6 @@ function Window:init()
 	window.frames.opacitybackground = window.frames.base:FindChild("OpacityBackground")
 	window.frames.opacitybackground:SetOpacity(RM.settings.opacity)
 	
-	window.frames.resizeLeaf = window.frames.base:FindChild("ResizeLeaf")
 	window.frames.footer = window.frames.base:FindChild("Footer")
 	window.frames.solo = window.frames.footer:FindChild("btnSolo")
 	window.frames.copyField = window.frames.base:FindChild("CopyField")
@@ -138,13 +136,14 @@ function Window:init()
 	window.frames.timerLabel = window.frames.base:FindChild("TimerLabel")
 	window.frames.globalStatLabel = window.frames.base:FindChild("GlobalStatLabel")
 
-	window.frames.base:SetData(self)
+	self.frames.base:SetData(self)
+	self.frames.base:SetAnchorOffsets(self.settings.x, self.settings.y, self.settings.x + self.settings.width, 0)
+	self:setRows(self.settings.rows)
 
 	local bSolo = Apollo.GetConsoleVariable("cmbtlog.disableOtherPlayers")
 	window.frames.solo:SetTextColor(bSolo and "xkcdAcidGreen" or "xkcdBloodOrange")
 	
 	window.selectedMode:init(window)
-	window:resize()
 	window:showResizer(not RM.settings.lock)
 	
 	window.frames.header:SetOpacity(RM.settings.mousetransparancy)
@@ -254,10 +253,6 @@ function Window:setRows(count)
 		rowpos = 1 + rowCount * (self.settings.rowHeight + 1)
 	end
 	
-	if rowCount == count then
-		return
-	end
-	
 	count = max(count, 1)
 	self.settings.rows = count
 	
@@ -298,12 +293,10 @@ function Window:setRows(count)
 		rowpos = rowpos + self.settings.rowHeight + 1
 		self.frames.rows[i].base:Show(false)
 	end
-	
-	self.resizing = true
-	local anchor = {self.frames.base:GetAnchorOffsets()}
-	self.frames.base:SetAnchorOffsets(anchor[1], anchor[2], anchor[3], 45 + anchor[2] + (count * (self.settings.rowHeight + 1)))
-	self.resizing = false
-	
+
+	local left, top, right, bottom = self.frames.base:GetAnchorOffsets()
+	self.frames.base:SetAnchorOffsets(left,top,right, top + 45 + count * (self.settings.rowHeight + 1))
+
 	self:update()
 end
 function Window:timerUpdate(duration)
@@ -351,17 +344,6 @@ end
 function Window:setGlobalLabel(text)
 	self.frames.globalStatLabel:SetText(NumberFormat(text))
 end
-function Window:setWidth(width)
-	self.frames.base:SetWidth(width)
-	self:update(true)
-end
-function Window:resize()
-	self.resizing = true
-	self.frames.base:SetAnchorOffsets(self.settings.x, self.settings.y, self.settings.x + self.settings.width, self.settings.y + 45 + (self.settings.rows * (self.settings.rowHeight + 1)))
-	self.resizing = false
-	
-	self:setRows(self.settings.rows)
-end
 function Window:showResizer(state)
 	self.frames.resizerLeft:Show(state)
 	self.frames.resizerRight:Show(state)
@@ -369,28 +351,6 @@ function Window:showResizer(state)
 end
 
 -- Window Event Handlers
-
-function RM:OnHeaderButtonDown(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY)
-	local window = wndHandler:GetParent():GetData()
-	
-	if eMouseButton == 0 and not RM.settings.lock then
-		window.pressed = true
-		local mouse = Apollo.GetMouse()
-		window.mouseStartX = mouse.x
-		window.mouseStartY = mouse.y
-		
-		local anchor = {window.frames.base:GetAnchorOffsets()}
-		window.attrStartX = anchor[1]
-		window.attrStartY = anchor[2]
-	end
-end
-
-function RM:OnHeaderButtonUp(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY)
-	if eMouseButton == 0 then
-		local window = wndHandler:GetParent():GetData()
-		window.pressed = false
-	end
-end
 
 function RM:OnHeaderTextButtonUp(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY)
 	if eMouseButton == 1 then
@@ -407,20 +367,6 @@ function RM:OnHeaderTextMouseExit(wndHandler, wndControl, x, y)
 	wndHandler:SetTextColor(ApolloColor.new(0.8, 0.8, 0.8, 1))
 end
 
-function RM:OnHeaderMouseMove(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY)
-	local window = wndHandler:GetParent():GetData()
-	
-	if window.pressed then
-		local mouse = Apollo.GetMouse()
-		window.settings.x = mouse.x - window.mouseStartX + window.attrStartX
-		window.settings.y = mouse.y - window.mouseStartY + window.attrStartY
-		
-		local anchor = {window.frames.base:GetAnchorOffsets()}
-		window.frames.base:SetAnchorOffsets(window.settings.x, window.settings.y,
-			window.settings.x + anchor[3] - anchor[1] ,window.settings.y + anchor[4] - anchor[2])
-	end
-end
-
 function RM:OnFrameMouseEnter(wndHandler, wndControl, x, y)
 	if wndHandler == wndControl then
 		local window = wndHandler:GetData()
@@ -435,6 +381,25 @@ function RM:OnFrameMouseExit(wndHandler, wndControl, x, y)
 		window.frames.header:SetOpacity(RM.settings.mousetransparancy)
 		window.frames.footer:SetOpacity(RM.settings.mousetransparancy)
 	end
+end
+
+function RM:OnFrameWindowMove(wndHandler, wndControl, left, top, right, bottom)
+	local window = wndHandler:GetData()
+
+	window.settings.x = left
+	window.settings.y = top
+	window.settings.width = right - left
+
+	for _,row in pairs(window.frames.rows) do
+		local left,top,right,bottom = row.base:GetAnchorOffsets()
+		row.base:SetAnchorOffsets(left,top,left+window.settings.width-2, bottom)
+	end
+
+	-- return when height is unchanged (i.e. only width changes or this event is fired by a window move)
+	if (bottom-top) == (45 + #window.frames.rows * (window.settings.rowHeight + 1)) then return end
+
+	-- have to use actual cursor position instead of height to account for repeated movements smaller than rowHeight
+	window:setRows(round((Apollo.GetMouse().y - window.settings.y - 45) / (window.settings.rowHeight+1)))
 end
 
 function RM:OnButtonSolo(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY, bDoubleClick, bStopPropagation )
@@ -560,53 +525,6 @@ function RM:OnReportClose(wndHandler, wndControl, eMouseButton)
 end
 function RM:OnReportCancel(wndHandler, wndControl, eMouseButton)
 	wndHandler:GetParent():GetParent():Destroy()
-end
-
--- TODO Vim: the only hack here is the guy who wrote these two functions. Fix this mess. #6
-
--- TODO: I really want to get this working with mousemove...
-function RM:OnWindowSizeChanged(wndHandler, wndControl)
-	local window = wndHandler:GetParent():GetData()
-	
-	if window and wndControl == wndHandler and not window.resizing then
-		local mouse = Apollo.GetMouse()
-		
-		-- This is a hack since SizeChanged gets called on window move
-		if mouse.y < window.settings.y + (window.settings.rowHeight + 1) * #window.frames.rows then return end
-		
-		-- This is also a hack, we attach this event to a leaf window, otherwise we get far too many events
-		window.frames.resizeLeaf:RemoveEventHandler("WindowSizeChanged")
-		
-		local anchor = {window.frames.base:GetAnchorOffsets()}
-		local rows = round((mouse.y - anchor[2] - 45) / (window.settings.rowHeight+1))
-		if rows <= 0 then rows = 1 end
-		window:setRows(rows)
-		window.frames.base:SetAnchorOffsets(anchor[1], anchor[2], anchor[3], 45 + anchor[2] + (rows * (window.settings.rowHeight + 1)))
-		window.settings.width = anchor[3] - anchor[1]
-		
-		for i = 1, rows do
-			local anchor = {window.frames.rows[i].base:GetAnchorOffsets()}
-			window.frames.rows[i].base:SetAnchorOffsets(anchor[1], anchor[2], anchor[1] + window.settings.width - 2, anchor[4])
-		end
-		
-		window:update()
-		
-		window.frames.resizeLeaf:AddEventHandler("WindowSizeChanged", "OnWindowSizeChanged", RM)
-	end
-end
-
--- This is yet another hack to work around bugs caused by our SizeChanged on move hack...
-function RM:OnResizerButtonDown(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY, bDoubleClick, bStopPropagation)
-	local window = wndHandler:GetParent():GetParent():GetData()
-	
-	local mouse = Apollo.GetMouse()
-	local anchor = {window.frames.base:GetAnchorOffsets()}
-	local rows = round((mouse.y - anchor[2] - 45) / (window.settings.rowHeight+1))
-	if rows <= 0 then rows = 1 end
-	if math.abs(rows - #window.frames.rows) > 1 then
-		window:setRows(rows)
-		window.frames.base:SetAnchorOffsets(anchor[1], anchor[2], anchor[3], 45 + anchor[2] + (rows * (window.settings.rowHeight + 1)))
-	end
 end
 
 function RM:OnButtonMouseEnter(wndHandler, wndControl, x, y)
