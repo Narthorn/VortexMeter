@@ -176,8 +176,6 @@ function Window:update(useOldData)
 	self.rowCount = self.rowCount or 0
 	self.maxValue = max(self.maxValue or 1, 1)
 	
-	local anchors = {self.frames.rows[1].base:GetAnchorOffsets()}
-	local maxRowWidth = anchors[3] - anchors[1]
 	for i = 1, self.settings.rows do
 		local row = self.frames.rows[i]
 		local data = self.lastData[i]
@@ -216,8 +214,7 @@ function Window:update(useOldData)
 			
 			row.leftLabel:SetText(tostring(data.leftLabel))
 			row.rightLabel:SetText(tostring(data.rightLabel))
-			local anchor = {row.background:GetAnchorOffsets()}
-			row.background:SetAnchorOffsets(anchor[1], anchor[2], anchor[1] + max(min(maxRowWidth * data.value / self.maxValue, maxRowWidth), 0), anchor[4])
+			row.background:SetAnchorPoints(0, 0, data.value / self.maxValue, 1)
 			row.background:SetBGColor(ApolloColor.new(data.color[1], data.color[2], data.color[3], 1))
 			row.events.leftClick = data.leftClick
 			row.events.middleClick = data.middleClick
@@ -288,8 +285,9 @@ function Window:setRows(count)
 			self.frames.rows[i].background:SetOpacity(0.7)
 		end
 			
-		local anchor = {self.frames.base:GetAnchorOffsets()}
-		self.frames.rows[i].base:SetAnchorOffsets(1, rowpos, anchor[3] - anchor[1] - 1, rowpos + self.settings.rowHeight)
+		local left, top, right, bottom = self.frames.rows[i].base:GetAnchorOffsets()
+		self.frames.rows[i].base:SetAnchorOffsets(left, rowpos, right, rowpos + self.settings.rowHeight)
+		self.frames.rows[i].base:SetData(self.frames.rows[i])
 		rowpos = rowpos + self.settings.rowHeight + 1
 		self.frames.rows[i].base:Show(false)
 	end
@@ -390,11 +388,6 @@ function RM:OnFrameWindowMove(wndHandler, wndControl, left, top, right, bottom)
 	window.settings.y = top
 	window.settings.width = right - left
 
-	for _,row in pairs(window.frames.rows) do
-		local left,top,right,bottom = row.base:GetAnchorOffsets()
-		row.base:SetAnchorOffsets(left,top,left+window.settings.width-2, bottom)
-	end
-
 	-- return when height is unchanged (i.e. only width changes or this event is fired by a window move)
 	if (bottom-top) == (45 + #window.frames.rows * (window.settings.rowHeight + 1)) then return end
 
@@ -452,23 +445,6 @@ function RM:OnButtonPlayers(wndHandler, wndControl, eMouseButton)
 	window.frames.buttons.showEnemies:Show(true)
 	window.showEnemies = false
 	window:update()
-end
-
-function RM:OnRowButtonUp(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY)
-	local window = wndHandler:GetParent():GetParent():GetData()
-	
-	for i = 1, window.settings.rows do
-		local row = window.frames.rows[i]
-		if row.base == wndControl then
-			if eMouseButton == 0 then
-				row.events.leftClick()
-			elseif eMouseButton == 1 then
-				row.events.rightClick()
-			elseif eMouseButton == 2 then
-				row.events.middleClick()
-			end
-		end
-	end
 end
 
 function RM:OnBackgroundButtonUp(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY)
@@ -557,35 +533,34 @@ function RM:OnButtonMouseExit(wndHandler, wndControl, x, y)
 	end
 end
 
-function RM:OnRowMouseEnter(wndHandler, wndControl, x, y)
-	local window = wndHandler:GetParent():GetParent():GetData()
+function RM:OnRowButtonUp(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY)
+	if wndHandler ~= wndControl then return end
+	local row = wndHandler:GetData()
 	
-	if wndHandler == wndControl then
-		for i = 1, window.settings.rows do
-			local row = window.frames.rows[i]
-			if row.base == wndControl then
-				row.background:SetOpacity(0.9)
-				if row.tooltip then
-					RM.Tooltip:show(row.tooltip())
-				end
-			end
-		end
+	if eMouseButton == 0 then
+		row.events.leftClick()
+	elseif eMouseButton == 1 then
+		row.events.rightClick()
+	elseif eMouseButton == 2 then
+		row.events.middleClick()
+	end
+end
+
+function RM:OnRowMouseEnter(wndHandler, wndControl, x, y)
+	if wndHandler ~= wndControl then return end
+	local row = wndHandler:GetData()
+	
+	row.background:SetOpacity(0.9)
+	if row.tooltip then
+		RM.Tooltip:show(row.tooltip())
 	end
 end
 
 function RM:OnRowMouseExit(wndHandler, wndControl, x, y)
-	local window = wndHandler:GetParent():GetParent():GetData()
-	
-	if wndHandler == wndControl then
-		for i = 1, window.settings.rows do
-			local row = window.frames.rows[i]
-			if row.base == wndControl then
-				row.background:SetOpacity(0.7)
-			 end
-		end
-		
-		RM.Tooltip:hide()
-	end
+	if wndHandler ~= wndControl then return end
+	local row = wndHandler:GetData()
+	row.background:SetOpacity(0.7)
+	RM.Tooltip:hide()
 end
 
 -- Modes
