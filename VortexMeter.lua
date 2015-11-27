@@ -207,7 +207,7 @@ function Ability:getPreparedAbilityStatData(combat)
 		{ name = L["Crit Rate"], value = ("%.2f%%"):format(self.crits / self.swings * 100) },
 		{ name = L["Multi-Hit Total (%)"], value = VortexMeter.numberFormat(self.totalMultiHit) .. " (" .. ("%.2f%%"):format(self.totalMultiHit / max(self.total,1) * 100) .. ")"},
 		{ name = L["Multi-Hit Rate"], value = ("%.2f%%"):format(self.multihits / self.swings * 100) },
-		{ name = L["Swings (Per second)"], value = VortexMeter.numberFormat(self.swings) .. " (" .. ("%.2f"):format(self.swings / combat.duration) .. ")" },
+		{ name = L["Swings (Per second)"], value = VortexMeter.numberFormat(self.swings) .. " (" .. ("%.2f"):format(self.swings / max(combat.duration, 1)) .. ")" },
 		{ name = L["Hits / Crits / Multi-Hits"], value = VortexMeter.numberFormat(self.hits) .. " / " .. VortexMeter.numberFormat(self.crits) .. " / " .. VortexMeter.numberFormat(self.multihits)},
 		{ name = L["Deflects (%)"], value = VortexMeter.numberFormat(self.deflects) .. " (" .. ("%.2f%%"):format(self.deflects / self.swings * 100) .. ")" },
 		{ name = L["Interrupts"], value = VortexMeter.numberFormat(self.interrupts) },
