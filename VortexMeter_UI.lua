@@ -1190,7 +1190,7 @@ function RM.UI.Init()
 end
 
 function RM.UI.Destroy()
-	for i, window in ipairs(Windows) do
+	for i=#Windows,1,-1 do
 		Windows[i].frames.base:Destroy()
 		tremove(Windows, i)
 		tremove(RM.settings.windows, i)
