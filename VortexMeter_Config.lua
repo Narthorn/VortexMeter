@@ -193,8 +193,7 @@ function RM:OnConfigClassColorPress(wndHandler, wndControl, eMouseButton, nLastR
 end
 
 function RM:OnConfigLockButton(wndHandler, wndControl, eMouseButton)
-	RM.settings.lock = not RM.settings.lock
-	RM.UI.ShowResizer(not RM.settings.lock)
+	RM.UI.Lock(wndHandler:IsChecked())
 end
 
 function RM:OnConfigTooltipsButton(wndHandler, wndControl, eMouseButton)

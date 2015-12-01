@@ -145,7 +145,7 @@ function Window:init()
 	window.frames.solo:SetTextColor(bSolo and "xkcdAcidGreen" or "xkcdBloodOrange")
 	
 	window.selectedMode:init(window)
-	window:showResizer(not RM.settings.lock)
+	window:Lock(RM.settings.lock)
 	
 	window.frames.header:SetOpacity(RM.settings.mousetransparancy)
 	window.frames.footer:SetOpacity(RM.settings.mousetransparancy)
@@ -343,10 +343,11 @@ end
 function Window:setGlobalLabel(text)
 	self.frames.globalStatLabel:SetText(NumberFormat(text))
 end
-function Window:showResizer(state)
-	self.frames.resizerLeft:Show(state)
-	self.frames.resizerRight:Show(state)
-	self.frames.base:SetStyle("Sizable", state)
+function Window:Lock(state)
+	self.frames.resizerLeft:Show(not state)
+	self.frames.resizerRight:Show(not state)
+	self.frames.base:SetStyle("Sizable", not state)
+	self.frames.base:SetStyle("Moveable", not state)
 end
 
 -- Window Event Handlers
@@ -1227,8 +1228,9 @@ function RM.UI.Visible(visible)
 	end
 end
 
-function RM.UI.ShowResizer(state)
+function RM.UI.Lock(state)
+	RM.settings.lock = state
 	for i, window in ipairs(Windows) do
-		window:showResizer(state)
+		window:Lock(state)
 	end
 end
