@@ -802,7 +802,7 @@ function Modes.interactionAbilities:update(window)
 		
 		row.icon = ability.ref.detail.icon
 		row.leftLabel = "      " .. ability.ref.name
-		row.rightLabel = BuildFormat(NumberFormat(ability.value), ability.value / duration, ability.value / math.max(data.total, 1) * 100)
+		row.rightLabel = BuildFormat(NumberFormat(ability.value), ability.value / duration, ability.value / math.max(data.total, 1) * 100) .. " - " .. ability.ref.swings
 		
 		row.color = RM.abilityTypeColors[ability.ref.type]
 		row.value = ability.value
@@ -980,7 +980,7 @@ function Modes.abilities:update(window)
 		
 		row.icon = ability.ref.detail.icon
 		row.leftLabel = "      " .. ability.ref.name
-		row.rightLabel = BuildFormat(NumberFormat(ability.value), ability.value / duration, ability.value / math.max(data.total, 1) * 100)
+		row.rightLabel = BuildFormat(NumberFormat(ability.value), ability.value / duration, ability.value / math.max(data.total, 1) * 100) .. " - " .. ability.ref.swings 
 		
 		row.color = RM.abilityTypeColors[ability.ref.type]
 		row.value = ability.value
