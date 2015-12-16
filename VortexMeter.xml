@@ -70,9 +70,6 @@
 				<Event Name="MouseButtonDown" Function="OnButtonSolo"/>
 			</Control>
 		</Control>
-		<Control Class="Window" LAnchorPoint="0" LAnchorOffset="0" TAnchorPoint="0" TAnchorOffset="24" RAnchorPoint="1" RAnchorOffset="0" BAnchorPoint="1" BAnchorOffset="-20" RelativeToClient="1" Font="CRB_Interface9" Text="" BGColor="ff252525" TextColor="UI_WindowTextDefault" Template="Default" TooltipType="OnCursor" Name="CopyBackground" TooltipColor="" IgnoreMouse="1" NewWindowDepth="1" Sprite="WhiteFill" Picture="1" Visible="0" Escapable="1" CloseOnExternalClick="1" HideInEditor="0">
-			<Control Class="EditBox" LAnchorPoint="0" LAnchorOffset="4" TAnchorPoint="0" TAnchorOffset="4" RAnchorPoint="1" RAnchorOffset="-4" BAnchorPoint="1" BAnchorOffset="-4" RelativeToClient="1" Font="CRB_Interface9" Text="" BGColor="UI_WindowBGDefault" TextColor="UI_WindowTextDefault" Template="Default" TooltipType="OnCursor" Name="CopyField" TooltipColor="" MultiLine="1" ReadOnly="1" ClearOnEscape="0" Escapable="1" LoseFocusOnExternalClick="1" Visible="0" Border="0" CloseOnExternalClick="1"/>
-		</Control>
 		<Control Class="Window" LAnchorPoint="0" LAnchorOffset="0" TAnchorPoint="0" TAnchorOffset="24" RAnchorPoint="1" RAnchorOffset="0" BAnchorPoint="1" BAnchorOffset="-20" RelativeToClient="1" Font="CRB_Interface9" Text="" BGColor="ff121212" TextColor="UI_WindowTextDefault" Template="Default" TooltipType="OnCursor" Name="OpacityBackground" TooltipColor="" Sprite="WhiteFill" Picture="1" IgnoreMouse="1" Visible="1" HideInEditor="0"/>
 		<Event Name="MouseEnter" Function="OnFrameMouseEnter"/>
 		<Event Name="MouseExit" Function="OnFrameMouseExit"/>

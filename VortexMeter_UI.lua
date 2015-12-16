@@ -103,38 +103,40 @@ function Window:new(settings)
 end
 
 function Window:init()
-	window = self
-	
-	window.frames.base = Apollo.LoadForm(RM.xmlMainDoc, "VortexMeterForm", nil, RM)
-	window.frames.header = window.frames.base:FindChild("Header")
-	window.frames.headerLabel = window.frames.base:FindChild("HeaderText")
-	
-	window.frames.buttons = { }
-	
-	window.frames.buttons.close = window.frames.base:FindChild("ButtonClose")
-	window.frames.buttons.copy = window.frames.base:FindChild("ButtonCopy")
-	window.frames.buttons.clear = window.frames.base:FindChild("ButtonClear")
-	window.frames.buttons.pin = window.frames.base:FindChild("ButtonPin")
-	window.frames.buttons.config = window.frames.base:FindChild("ButtonConfig")
-	window.frames.buttons.showEnemies = window.frames.base:FindChild("ButtonEnemies")
-	window.frames.buttons.showPlayers = window.frames.base:FindChild("ButtonPlayers")
-	window.frames.buttons.combatStart = window.frames.base:FindChild("ButtonStart")
-	window.frames.buttons.combatEnd = window.frames.base:FindChild("ButtonStop")
-	
-	window.frames.background = window.frames.base:FindChild("Background")
-	window.frames.opacitybackground = window.frames.base:FindChild("OpacityBackground")
-	window.frames.opacitybackground:SetOpacity(RM.settings.opacity)
-	
-	window.frames.footer = window.frames.base:FindChild("Footer")
-	window.frames.solo = window.frames.footer:FindChild("btnSolo")
-	window.frames.copyField = window.frames.base:FindChild("CopyField")
-	window.frames.copyBackground = window.frames.base:FindChild("CopyBackground")
-	
-	window.frames.resizerLeft = window.frames.base:FindChild("ResizeLeft")
-	window.frames.resizerRight = window.frames.base:FindChild("ResizeRight")
-	
-	window.frames.timerLabel = window.frames.base:FindChild("TimerLabel")
-	window.frames.globalStatLabel = window.frames.base:FindChild("GlobalStatLabel")
+	local base = Apollo.LoadForm(RM.xmlMainDoc, "VortexMeterForm", nil, RM)
+
+	self.frames = {
+		base        = base,
+		header      = base:FindChild("Header"),
+		headerLabel = base:FindChild("HeaderText"),
+		
+		buttons = {
+			close       = base:FindChild("ButtonClose"),
+			copy        = base:FindChild("ButtonCopy"),
+			clear       = base:FindChild("ButtonClear"),
+			pin         = base:FindChild("ButtonPin"),
+			config      = base:FindChild("ButtonConfig"),
+			showEnemies = base:FindChild("ButtonEnemies"),
+			showPlayers = base:FindChild("ButtonPlayers"),
+			combatStart = base:FindChild("ButtonStart"),
+			combatEnd   = base:FindChild("ButtonStop"),
+		},
+		
+		rows = {},
+		obscured_rows = {},
+
+		background        = base:FindChild("Background"),
+		opacitybackground = base:FindChild("OpacityBackground"),
+		
+		footer = base:FindChild("Footer"),
+		solo   = base:FindChild("btnSolo"),
+		
+		resizerLeft  = base:FindChild("ResizeLeft"),
+		resizerRight = base:FindChild("ResizeRight"),
+		
+		timerLabel      = base:FindChild("TimerLabel"),
+		globalStatLabel = base:FindChild("GlobalStatLabel"),
+	}
 
 	self.frames.base:SetData(self)
 	self.frames.base:SetAnchorOffsets(self.settings.x, self.settings.y, self.settings.x + self.settings.width, 0)
@@ -142,13 +144,15 @@ function Window:init()
 	self:setRows(self.settings.rows)
 
 	local bSolo = Apollo.GetConsoleVariable("cmbtlog.disableOtherPlayers")
-	window.frames.solo:SetTextColor(bSolo and "xkcdAcidGreen" or "xkcdBloodOrange")
+	self.frames.solo:SetTextColor(bSolo and "xkcdAcidGreen" or "xkcdBloodOrange")
 	
-	window.selectedMode:init(window)
-	window:Lock(RM.settings.lock)
-	
-	window.frames.header:SetOpacity(RM.settings.mousetransparancy)
-	window.frames.footer:SetOpacity(RM.settings.mousetransparancy)
+	self:Lock(RM.settings.lock)
+
+	self.frames.opacitybackground:SetOpacity(RM.settings.opacity)
+	self.frames.header:SetOpacity(RM.settings.mousetransparancy)
+	self.frames.footer:SetOpacity(RM.settings.mousetransparancy)
+
+	self.selectedMode:init(self)
 end
 
 function Window:clearRows(count) -- from count to rowCount will be hidden
@@ -168,10 +172,8 @@ function Window:clearRows(count) -- from count to rowCount will be hidden
 		row.base:Show(false)
 	end
 end
-function Window:update(useOldData)
-	if not useOldData then
-		self.lastData, self.rowCount, self.maxValue = self.selectedMode:update(self)
-	end
+function Window:update()
+	self.lastData, self.rowCount, self.maxValue = self.selectedMode:update(self)
 	
 	self.lastData = self.lastData or {}
 	self.rowCount = self.rowCount or 0
@@ -180,7 +182,6 @@ function Window:update(useOldData)
 	for i = 1, self.settings.rows do
 		local row = self.frames.rows[i]
 		local data = self.lastData[i]
-		local rightClick
 		if data then
 			-- Default values
 			if not data.value then
@@ -202,9 +203,7 @@ function Window:update(useOldData)
 				data.middleClick = Dummy
 			end
 			if not data.rightClick then
-				rightClick = function() end --RM:OnBackgroundButtonUp(self, self, 1, 0, 0) end
-			else
-				rightClick = function() data.rightClick(self) end
+				data.rightClick = Dummy
 			end
 			if data.icon and data.icon ~= "" then
 				row.icon:SetSprite(data.icon)
@@ -219,7 +218,7 @@ function Window:update(useOldData)
 			row.background:SetBGColor(ApolloColor.new(data.color[1], data.color[2], data.color[3], 1))
 			row.events.leftClick = data.leftClick
 			row.events.middleClick = data.middleClick
-			row.events.rightClick = rightClick
+			row.events.rightClick = data.rightClick
 			row.tooltip = data.tooltip
 			row.base:Show(true)
 		else
@@ -368,19 +367,17 @@ function RM:OnHeaderTextMouseExit(wndHandler, wndControl, x, y)
 end
 
 function RM:OnFrameMouseEnter(wndHandler, wndControl, x, y)
-	if wndHandler == wndControl then
-		local window = wndHandler:GetData()
-		window.frames.header:SetOpacity(1)
-		window.frames.footer:SetOpacity(1)
-	end
+	if wndHandler ~= wndControl then return end
+	local window = wndHandler:GetData()
+	window.frames.header:SetOpacity(1)
+	window.frames.footer:SetOpacity(1)
 end
 
 function RM:OnFrameMouseExit(wndHandler, wndControl, x, y)
-	if wndHandler == wndControl then
-		local window = wndHandler:GetData()
-		window.frames.header:SetOpacity(RM.settings.mousetransparancy)
-		window.frames.footer:SetOpacity(RM.settings.mousetransparancy)
-	end
+	if wndHandler ~= wndControl then return end
+	local window = wndHandler:GetData()
+	window.frames.header:SetOpacity(RM.settings.mousetransparancy)
+	window.frames.footer:SetOpacity(RM.settings.mousetransparancy)
 end
 
 function RM:OnFrameWindowMove(wndHandler, wndControl, left, top, right, bottom)
@@ -465,7 +462,7 @@ function RM:OnBackgroundScroll(wndHandler, wndControl, nLastRelativeMouseX, nLas
 	local window = wndHandler:GetParent():GetData()
 	
 	local val = window.scrollOffset + ((fScrollAmount < 0) and 1 or -1)
-	val = max(0, min(val, window.rowCount - window.settings.rows))
+	val = max(0, min(val, window.rowCount - #window.frames.rows))
 	if val ~= window.scrollOffset then
 		window.scrollOffset = val
 		window:update()
@@ -572,7 +569,6 @@ Mode.__index = Mode
 function Mode:new(name)
 	local self = {}
 	self.name = name
-	self.index = 0
 	return setmetatable(self, Mode)
 end
 function Mode:rightClick() end
@@ -591,7 +587,7 @@ function Modes.modes:init(window)
 end
 function Modes.modes:update(window)
 	local rows = {}
-	local limit = min(#Sortmodes, window.settings.rows)
+	local limit = min(#Sortmodes, #window.frames.rows)
 	for i = 1, limit do
 		local data = {}
 		local lastMode = window:getLastMode()
@@ -599,7 +595,7 @@ function Modes.modes:update(window)
 		
 		data.leftLabel = L[sortMode]
 		data.rightlabel = ""
-		data.value = window.settings.width - 2
+		data.value = 1
 		data.leftClick = function()
 			local oldSortmode = window.settings.sort
 			window.settings.sort = Sortmodes[i + window.scrollOffset]
@@ -611,7 +607,7 @@ function Modes.modes:update(window)
 		
 		rows[i] = data
 	end
-	return rows, #Sortmodes, window.settings.width - 2
+	return rows, #Sortmodes, 1
 end
 
 -- Mode: Combat
@@ -640,7 +636,7 @@ function Modes.combat:update(window)
 	
 	local rows = {}
 	local selfFound = false
-	local limit = min(data.count, window.settings.rows)
+	local limit = min(data.count, #window.frames.rows)
 	local duration = max(window.selectedCombat.duration, 1)
 	for i = 1, limit do
 		local row = {}
@@ -665,7 +661,7 @@ function Modes.combat:update(window)
 		row.leftLabel = (RM.settings.showRankNumber and i + window.scrollOffset .. ". " or "") .. player.name
 		row.rightLabel = BuildFormat(NumberFormat(player.value), player.value / duration, player.value / max(data.total, 1) * 100)
 		
-		row.color = RM.settings.classColors[player.ref.detail.class] or {1, 1, 1}
+		row.color = RM.classColors[player.ref.detail.class] or {1, 1, 1}
 		row.value = player.value
 		row.tooltip = function()
 			return player.ref:getTooltip(window.settings.sort)
@@ -751,14 +747,14 @@ function Modes.interactions:update(window)
 	local data = window.selectedPlayer:getInteractions(window.settings.sort)
 	local duration = max(window.selectedCombat.duration, 1)
 	local rows = {}
-	local limit = min(data.count, window.settings.rows)
+	local limit = min(data.count, #window.frames.rows)
 	for i = 1, limit do
 		local row = {}
 		local interaction = data.interactions[i + window.scrollOffset]
 		
 		row.leftLabel = (RM.settings.showRankNumber and i + window.scrollOffset .. ". " or "") .. interaction.name
 		row.rightLabel = BuildFormat(NumberFormat(interaction.value), interaction.value / duration, interaction.value / data.total * 100)
-		row.color = RM.settings.classColors[interaction.ref.detail.class] or {1, 1, 1}
+		row.color = RM.classColors[interaction.ref.detail.class] or {1, 1, 1}
 		row.value = interaction.value
 		row.leftClick = function()
 			window:setMode("interactionAbilities", interaction.ref, window.selectedPlayer)
@@ -810,7 +806,7 @@ function Modes.interactionAbilities:update(window)
 	local data = window.selectedPlayer:getInteractionAbilityData()
 	local duration = max(window.selectedCombat.duration, 1)
 	local rows = {}
-	local limit = min(data.count, window.settings.rows)
+	local limit = min(data.count, #window.frames.rows)
 	for i = 1, limit do
 		
 		-- total bar
@@ -833,7 +829,7 @@ function Modes.interactionAbilities:update(window)
 		row.leftLabel = "      " .. ability.ref.name
 		row.rightLabel = BuildFormat(NumberFormat(ability.value), ability.value / duration, ability.value / max(data.total, 1) * 100)
 		
-		row.color = RM.settings.abilityTypeColors[ability.ref.type]
+		row.color = RM.abilityTypeColors[ability.ref.type]
 		row.value = ability.value
 		row.leftClick = function()
 			window:setMode("interactionAbility", ability.ref)
@@ -887,7 +883,7 @@ function Modes.interactionAbility:update(window)
 	local data = window.selectedAbility:getPreparedAbilityStatData(window.selectedCombat, window.settings.sort)
 	
 	local rows = {}
-	local limit = min(#data, window.settings.rows)
+	local limit = min(#data, #window.frames.rows)
 	for i = 1, limit do
 		local row = {}
 		local stat = data[i + window.scrollOffset]
@@ -927,14 +923,14 @@ end
 Modes.combats = Mode:new("combats")
 function Modes.combats:init(window)
 	window.rowCount = #RM.combats
-	window.scrollOffset = max(window.rowCount - window.settings.rows, 0)
+	window.scrollOffset = max(window.rowCount - #window.frames.rows, 0)
 	window:setTitle(L["Combats"] .. ": " .. L[window.settings.sort])
 end
 function Modes.combats:update(window)
 	if not window.selectedCombat then return end
 	
 	local rows = {}
-	local limit = min(#RM.combats, window.settings.rows)
+	local limit = min(#RM.combats, #window.frames.rows)
 	local ncombats = 0
 	for i = 1, limit do
 		local row = {}
@@ -985,7 +981,7 @@ function Modes.abilities:update(window)
 	local data = window.selectedPlayer:getPreparedAbilityData(window.settings.sort)
 	local duration = max(window.selectedCombat.duration, 1)
 	local rows = {}
-	local limit = min(data.count, window.settings.rows)
+	local limit = min(data.count, #window.frames.rows)
 	for i = 1, limit do
 		
 		-- total bar
@@ -1008,7 +1004,7 @@ function Modes.abilities:update(window)
 		row.leftLabel = "      " .. ability.ref.name
 		row.rightLabel = BuildFormat(NumberFormat(ability.value), ability.value / duration, ability.value / max(data.total, 1) * 100)
 		
-		row.color = RM.settings.abilityTypeColors[ability.ref.type]
+		row.color = RM.abilityTypeColors[ability.ref.type]
 		row.value = ability.value
 		row.leftClick = function()
 			window:setMode("ability", ability.ref)
@@ -1077,7 +1073,7 @@ function Modes.ability:update(window)
 	end
 	
 	local rows = {}
-	local limit = min(#data, window.settings.rows)
+	local limit = min(#data, #window.frames.rows)
 	for i = 1, limit do
 		local row = {}
 		local stat = data[i + window.scrollOffset]

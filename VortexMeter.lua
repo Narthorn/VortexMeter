@@ -6,9 +6,52 @@
 VortexMeter = {
 	name = "VortexMeter",
 	version = {1,3,5},
+
 	combats = {},
+	Units = {},
+	Abilities = {},
+	
+	CurrentCombat = {},
+	
+	settings = {
+		windows = {},
+		lock = false,
+		alwaysShowPlayer = false,
+		showOnlyBoss = false,
+		showRankNumber = true,
+		showPercent = true,
+		showAbsolute = true,
+		showShortNumber = false,
+		mergeAbilitiesByName = true, -- Review this, do we actually need it or is there a bug?
+		opacity = 0,
+		tooltips = true,
+		enabled = true,
+		updaterate = 0.1,
+		mousetransparancy = 0.5,
+		bFirstRun = true,
+	},
+	
+	-- Class colors taken directly from website
+	classColors = {
+		[GameLib.CodeEnumClass.Warrior]      = {0.8,  0.1,  0.1},
+		[GameLib.CodeEnumClass.Engineer]     = {0.65, 0.65, 0},
+		[GameLib.CodeEnumClass.Esper]        = {0.1,  0.5,  0.7},
+		[GameLib.CodeEnumClass.Medic]        = {0.2,  0.6,  0.1},
+		[GameLib.CodeEnumClass.Stalker]      = {0.5,  0.1,  0.8},
+		[GameLib.CodeEnumClass.Spellslinger] = {0.9,  0.4,  0},
+	},
+
+	abilityTypeColors = {
+		[GameLib.CodeEnumDamageType.Magic] = {0.5, 0.1, 0.8},
+		[GameLib.CodeEnumDamageType.Tech] = {0.2, 0.6, 0.1},
+		[GameLib.CodeEnumDamageType.Physical] = {0.6, 0.6, 0.6},
+		[GameLib.CodeEnumDamageType.HealShields] = {0.1, 0.5, 0.7},
+		[GameLib.CodeEnumDamageType.Heal] = {0, 0.8, 0},
+		[GameLib.CodeEnumDamageType.Fall] = {0.6, 0.6, 0.6},
+		[GameLib.CodeEnumDamageType.Suffocate] = {0.6, 0.6, 0.6},
+	},
 }
-local ApolloUnit = Unit
+
 local L
 
 local pairs = pairs
@@ -22,79 +65,27 @@ local round = function(val) return math.floor(val + .5) end
 local setmetatable = setmetatable
 local VortexMeter = VortexMeter
 
-local Event = Event
-
-local Events = {}
-
-VortexMeter.Units = {}
 local Units = VortexMeter.Units
-VortexMeter.Abilities = {}
 local Abilities = VortexMeter.Abilities
 
-local StopTracking = false -- used by EndCombatAfterKill
 local LastDamageAction = 0
 local LastUpdate = 0
 local LastTimerUpdate = 0
 local InCombat = false
 local NeedsUpdate = false
 local Permanent = false -- manual combat start
-local UnitAvailabilityQueue = {}
-VortexMeter.CurrentCombat = {}
 
-local FilteredAbilities = {
---	[L["Ability name"]] = true,
-}
-local EndCombatAfterKill = {
---  "id",
-}
-local NewCombatAfterKill = {
---	"id",
-}
-
-VortexMeter.settings = {
-	windows = {},
-	classColors = {},
-	abilityTypeColors = {},
-	lock = false,
-	alwaysShowPlayer = false,
-	showOnlyBoss = false,
-	showRankNumber = true,
-	showPercent = true,
-	showAbsolute = true,
-	showShortNumber = false,
-	mergeAbilitiesByName = true, -- Review this, do we actually need it or is there a bug?
-	opacity = 0,
-	tooltips = true,
-	enabled = true,
-	updaterate = 0.1,
-	mousetransparancy = 0.5,
-}
-
--- Class colors taken directly from website
-VortexMeter.settings.classColors[GameLib.CodeEnumClass.Warrior] = {0.8, 0.1, 0.1}
-VortexMeter.settings.classColors[GameLib.CodeEnumClass.Engineer] = {0.65, 0.65, 0}
-VortexMeter.settings.classColors[GameLib.CodeEnumClass.Esper] = {0.1, 0.5, 0.7}
-VortexMeter.settings.classColors[GameLib.CodeEnumClass.Medic] = {0.2, 0.6, 0.1}
-VortexMeter.settings.classColors[GameLib.CodeEnumClass.Stalker] = {0.5, 0.1, 0.8}
-VortexMeter.settings.classColors[GameLib.CodeEnumClass.Spellslinger] = {0.9, 0.4, 0}
-
-VortexMeter.settings.abilityTypeColors[GameLib.CodeEnumDamageType.Magic] = {0.5, 0.1, 0.8}
-VortexMeter.settings.abilityTypeColors[GameLib.CodeEnumDamageType.Tech] = {0.2, 0.6, 0.1}
-VortexMeter.settings.abilityTypeColors[GameLib.CodeEnumDamageType.Physical] = {0.6, 0.6, 0.6}
-VortexMeter.settings.abilityTypeColors[GameLib.CodeEnumDamageType.HealShields] = {0.1, 0.5, 0.7}
-VortexMeter.settings.abilityTypeColors[GameLib.CodeEnumDamageType.Heal] = {0, 0.8, 0}
-VortexMeter.settings.abilityTypeColors[GameLib.CodeEnumDamageType.Fall] = {0.6, 0.6, 0.6}
-VortexMeter.settings.abilityTypeColors[GameLib.CodeEnumDamageType.Suffocate] = {0.6, 0.6, 0.6}
 
 function VortexMeter.GetDefaultWindowSettings()
-	local windowDefaultSettings = {}
-	windowDefaultSettings.sort = "damage"
-	windowDefaultSettings.rows = 8
-	windowDefaultSettings.width = 300
-	windowDefaultSettings.rowHeight = 18
-	windowDefaultSettings.x = (Apollo.GetDisplaySize().nWidth - windowDefaultSettings.width) / 2
-	windowDefaultSettings.y = Apollo.GetDisplaySize().nHeight / 2
-	return windowDefaultSettings
+	local defaults = {
+		sort = "damage",
+		rows = 8,
+		width = 300,
+		rowHeight = 18,
+	}
+	defaults.x = (Apollo.GetDisplaySize().nWidth - defaults.width) / 2
+	defaults.y = Apollo.GetDisplaySize().nHeight / 2
+	return defaults
 end
 
 local Ability = {}
@@ -224,13 +215,10 @@ function AbilityDetail:new(info)
 	self.type = info.type or "none"
 	self.filter = false
 	
-	if FilteredAbilities[self.name] and not info.abilityNew then
-		self.filter = true
-	end
-
 	return self
 end
 
+local ApolloUnit = Unit
 local Unit = {}
 function Unit:new(detail)
 	local self = {}
@@ -753,7 +741,6 @@ local function EndCombat(durationIsCallTime)
 	VortexMeter.CurrentCombat:endCombat(durationIsCallTime)
 	VortexMeter.overallCombat.previousDuration = VortexMeter.overallCombat.previousDuration + VortexMeter.CurrentCombat.duration
 	VortexMeter.overallCombat.duration = VortexMeter.overallCombat.previousDuration
-	StopTracking = false
 	InCombat = false
 	Permanent = false
 	
@@ -762,10 +749,6 @@ local function EndCombat(durationIsCallTime)
 end
 
 local function CombatEventsHandler(info, statType, damageAction)
-	if StopTracking and not Permanent then -- force a combat end on several bosses with incoming damage after kill extending the duration
-		return
-	end
-	
 	-- Sometimes the API gives us a nil target or caster, ignore these cases.
 	if not info.caster or not info.target then return end
 	
@@ -943,13 +926,7 @@ local SlashCommands = setmetatable({
 	config = function ()
 		VortexMeter.ConfigInit()
 	end,
-	toggle = function ()
-		if VortexMeter.settings.enabled then
-			Off()
-		else
-			On()
-		end
-	end
+	toggle = Toggle
 },
 {
 	__index = function (t, key)
@@ -1001,7 +978,7 @@ function VortexMeter:DelayedInit()
 	Apollo.RegisterSlashCommand("vortexmeter", "SlashHandler", self)
 	
 	-- Log other players (only the first time the addon is loaded)
-	if not self.settings.bSavedSettings then Apollo.SetConsoleVariable("cmbtlog.disableOtherPlayers", false) end
+	if self.settings.bFirstRun then Apollo.SetConsoleVariable("cmbtlog.disableOtherPlayers", false) end
 	
 	-- Create update timer
 	self.timerPulse = ApolloTimer.Create(self.settings.updaterate, true, "Update", self)
@@ -1022,27 +999,18 @@ end
 
 function VortexMeter:OnSave(eType)
 	if eType ~= GameLib.CodeEnumAddonSaveLevel.Character then return end
-	self.settings.bSavedSettings = true
+	self.settings.bFirstRun = false
 	
 	return VortexMeter.deepcopy(self.settings)
 end
 
-function VortexMeter:OnRestore(eType, tSavedState)
+function VortexMeter:OnRestore(eType, tSavedSettings)
 	if eType ~= GameLib.CodeEnumAddonSaveLevel.Character then return end
-
-	self.default_settings = VortexMeter.deepcopy(self.settings)
-	self.settings = VortexMeter.deepcopy(tSavedState)
-	
-	-- TODO: This needs to be a deep check
-	for key, value in pairs(self.default_settings) do
-		if self.settings[key] == nil then
+	for key, value in pairs(tSavedSettings) do
+		if self.settings[key] ~= nil then
 			self.settings[key] = value
 		end
 	end
-	
-	-- Forcibly override class colors since we got them wrong. (This isn't configurable, so it doesn't matter for now).
-	self.settings.classColors = self.default_settings.classColors
-	self.settings.abilityTypeColors = self.default_settings.abilityTypeColors
 end
 
 function VortexMeter:OnCombatLogHeal(tEventArgs)
