@@ -123,7 +123,6 @@ function Window:init()
 		},
 		
 		rows = {},
-		obscured_rows = {},
 
 		background        = base:FindChild("Background"),
 		opacitybackground = base:FindChild("OpacityBackground"),
@@ -242,54 +241,42 @@ function Window.report(text)
 end
 function Window:setRows(count)
 	local forCount = count
-	local rowCount = 0
-	local rowpos = 1
-	
-	if self.frames.rows then
-		rowCount = #self.frames.rows
-		rowpos = 1 + rowCount * (self.settings.rowHeight + 1)
-	end
+	local rowCount = #self.frames.rows
+	local rowpos = 1 + rowCount * (self.settings.rowHeight + 1)
 	
 	count = max(count, 1)
-	self.settings.rows = count
+
+	if rowCount ~= count then
 	
-	if self.frames.rows then
-		local diff = count - rowCount
-		if diff < 0 then -- remove row(s)
-			self:clearRows(count)
-			for i = count + 1, rowCount do
-				self.frames.obscured_rows[rowCount - i + count + 1] = tremove(self.frames.rows)
-			end
-			RM.data5 = self.frames.obscured_rows
-		elseif diff > 0 then -- add row(s)
-			self.scrollOffset = max(min(self.scrollOffset, self.rowCount - self.settings.rows), 0)
-		elseif diff == 0 then
-			forCount = 0
-		end
-	else
-		self.frames.rows = {}
-		self.frames.obscured_rows = {}
-	end
-	
-	for i = rowCount + 1, forCount do
-		self.frames.rows[i] = self.frames.obscured_rows[i]
+		self.settings.rows = count
 		
-		if not self.frames.rows[i] then
-			self.frames.rows[i] = { }
-			self.frames.rows[i].events = { }
-			self.frames.rows[i].base = Apollo.LoadForm(RM.xmlMainDoc, "Row", self.frames.background, RM)
-			self.frames.rows[i].background = self.frames.rows[i].base:FindChild("Background")
-			self.frames.rows[i].icon = self.frames.rows[i].base:FindChild("Icon")
-			self.frames.rows[i].rightLabel = self.frames.rows[i].base:FindChild("RightLabel")
-			self.frames.rows[i].leftLabel = self.frames.rows[i].base:FindChild("LeftLabel")
-			self.frames.rows[i].background:SetOpacity(0.7)
+		for i = count + 1, rowCount do
+			tremove(self.frames.rows).base:Destroy()
 		end
+
+		self.scrollOffset = max(min(self.scrollOffset, rowCount - #self.frames.rows), 0)
+		
+		for i = rowCount + 1, count do
+			local base = Apollo.LoadForm(RM.xmlMainDoc, "Row", self.frames.background, RM)
+			local row = {
+				events = {},
+				base       = base,
+				background = base:FindChild("Background"),
+				icon       = base:FindChild("Icon"),
+				leftLabel  = base:FindChild("LeftLabel"),
+				rightLabel = base:FindChild("RightLabel"),
+			}
+
+			row.base:SetData(row)
+			row.background:SetOpacity(0.7)
+			self.frames.rows[i] = row
 			
-		local left, top, right, bottom = self.frames.rows[i].base:GetAnchorOffsets()
-		self.frames.rows[i].base:SetAnchorOffsets(left, rowpos, right, rowpos + self.settings.rowHeight)
-		self.frames.rows[i].base:SetData(self.frames.rows[i])
-		rowpos = rowpos + self.settings.rowHeight + 1
-		self.frames.rows[i].base:Show(false)
+			local left, top, right, bottom = row.base:GetAnchorOffsets()
+			row.base:SetAnchorOffsets(left, rowpos, right, rowpos + self.settings.rowHeight)
+			row.base:Show(false)
+
+			rowpos = rowpos + self.settings.rowHeight + 1
+		end
 	end
 
 	local left, top, right, bottom = self.frames.base:GetAnchorOffsets()
