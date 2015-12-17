@@ -1112,74 +1112,16 @@ function VortexMeter:Update()
 	
 end
 
-local nCombatCount = 0
-local function FixCombatBug(bCombat)
-	local bInCombat = false
-	
-	if not bCombat then
-		if nCombatCount < 2 then
-			nCombatCount = nCombatCount + 1
-			bInCombat = true
-		else
-			nCombatCount = 0
-		end
-	else
-		nCombatCount = 0
-	end
-	
-	--[[
-	if nCombatCount > 0 then
-		gLog:info("nCombatCount: " .. nCombatCount)
-	end
-	--]]
-
-	return bInCombat or bCombat
-end
-
-
---[[
--- Determine if group is in combat by scanning all group members.
--- Checks if a pet owned by the player unit may be affecting their
--- combat status, ie Esper Geist.
--- @return true if any group members are in combat
- ]]
 function VortexMeter.GroupInCombat()
+	if GameLib.GetPlayerUnit():IsInCombat() then return true end
 	
-	if not GameLib.GetPlayerUnit() then
-		return false
-	end
-	
-	-- WHY DOES THE GAME SOMETIMES RETURN ISINCOMBAT FALSE WHEN IM IN COMBAT KSAJDFKSJDFKS
-	local bSelfInCombat = GameLib.GetPlayerUnit():IsInCombat() or VortexMeter.bPetAffectingCombat or VortexMeter.bInCombat
-	
-	local nMemberCount = GroupLib.GetMemberCount()
-	if nMemberCount == 0 then
-		VortexMeter.bGroupInCombat = FixCombatBug(bSelfInCombat)
-		return VortexMeter.bGroupInCombat
-	end
-	
-	local bCombat = false
-	
-	for i = 1, nMemberCount do
+	for i=1, GroupLib.GetMemberCount() do
 		local tUnit = GroupLib.GetUnitForGroupMember(i)
-		
-		if tUnit and (tUnit:IsInCombat() or (bSelfInCombat and tUnit:IsDead())) then
-			bCombat = true
-			
-			break
-		end
-		
+		if tUnit and tUnit:IsInCombat() then return true end
 	end
-	
-	if not bSelfInCombat and not bCombat then
-		bCombat = FixCombatBug(bSelfInCombat)
-	end
-	
-	VortexMeter.bGroupInCombat = bCombat
-	
-	return bCombat
-end
 
+	return false
+end
 
 function VortexMeter:SlashHandler(cmd, arg)
 	local list = {}
