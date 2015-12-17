@@ -704,18 +704,7 @@ local function AddGlobalUnit(detail, owner)
 	return unit
 end
 
-local function GetMaxValueCombat(sort, showNpcs)
-	local maxvalue = 1
-	for i, combat in ipairs(VortexMeter.combats) do
-		local value = combat:getPreparedPlayerData(sort, showNpcs).total / max(combat.duration, 1)
-		if value > maxvalue then
-			maxvalue = value
-		end
-	end
-	return maxvalue
-end
-
-local function NewCombat(permanent)
+function VortexMeter.NewCombat(permanent)
 	if InCombat then
 		return
 	end
@@ -733,7 +722,7 @@ local function NewCombat(permanent)
 	VortexMeter.UI.NewCombat()
 end
 
-local function EndCombat(durationIsCallTime)
+function VortexMeter.EndCombat(durationIsCallTime)
 	if not InCombat then
 		return
 	end
@@ -761,7 +750,7 @@ local function CombatEventsHandler(info, statType, damageAction)
 	if not selfAction then
 		if statType == "damage" or statType == "interrupts" then
 			if not InCombat then --and caster.inGroup then
-				NewCombat()
+				VortexMeter.NewCombat()
 			end
 		end
 	else
@@ -843,7 +832,7 @@ local function CombatEventsHandler(info, statType, damageAction)
 	end
 end
 
-local function On()
+function VortexMeter.On()
 	if VortexMeter.settings.enabled then return end
 	VortexMeter.settings.enabled = true
 	VortexMeter.UI.Visible(true)
@@ -862,7 +851,7 @@ local function On()
 	VortexMeter.timerPulse:Start()
 end
 
-local function Off()
+function VortexMeter.Off()
 	VortexMeter.settings.enabled = false
 	VortexMeter.UI.Visible(false)
 	
@@ -880,16 +869,16 @@ local function Off()
 	VortexMeter.timerPulse:Stop()
 end
 
-local function Toggle()
+function VortexMeter.Toggle()
 	if VortexMeter.settings.enabled then
-		Off()
+		VortexMeter.Off()
 	else
-		On()
+		VortexMeter.On()
 	end
 end
 
-local function Reset()
-	EndCombat()
+function VortexMeter.Reset()
+	VortexMeter.EndCombat()
 	
 	Units = {}
 	Abilities = {}
@@ -904,40 +893,12 @@ local function Reset()
 	VortexMeter.UI.Reset()
 end
 
-local SlashCommands = setmetatable({
-	show = function ()
-		On()
-	end,
-	hide = function ()
-		Off()
-	end,
-	default = function ()
-		VortexMeter.UI.Default()
-	end,
-	new = function ()
-		VortexMeter.UI.NewWindow()
-	end,
-	lock = function ()
-		VortexMeter.UI.Lock(true)
-	end,
-	unlock = function ()
-		VortexMeter.UI.Lock(false)
-	end,
-	config = function ()
-		VortexMeter.ConfigInit()
-	end,
-	toggle = Toggle
-},
-{
-	__index = function (t, key)
-		return function ()
-			Print(L["Available commands:"])
-			for cmd, func in pairs(t) do
-				Print("- " .. cmd)
-			end
-		end
-	end
-})
+function VortexMeter.Default()
+	VortexMeter.Off()
+	VortexMeter.UI.Destroy()
+	VortexMeter.UI.NewWindow()
+	VortexMeter.On()
+end
 
 function VortexMeter:OnLoad()
 	-- TODO: yuk..
@@ -946,15 +907,6 @@ function VortexMeter:OnLoad()
 	Apollo.LoadSprites("VortexMeterSprites.xml", "VortexMeterSprites")
 	self.xmlMainDoc = XmlDoc.CreateFromFile("VortexMeter.xml")
 	Event_FireGenericEvent("OneVersion_ReportAddonInfo", self.name, unpack(self.version))
-	
-	-- TODO: yuk..
-	VortexMeter.EndCombat = EndCombat
-	VortexMeter.Reset = Reset
-	VortexMeter.On = On
-	VortexMeter.Off = Off
-	VortexMeter.Toggle = Toggle
-	VortexMeter.NewCombat = NewCombat
-	VortexMeter.GetMaxValueCombat = GetMaxValueCombat
 	
 	tinsert(VortexMeter.settings.windows, VortexMeter.GetDefaultWindowSettings())
 	
@@ -987,7 +939,7 @@ function VortexMeter:DelayedInit()
 	VortexMeter.UI.Init()
 	if self.settings.enabled then
 		self.settings.enabled = false
-		On()
+		VortexMeter.On()
 	end
 	
 	self.tmrDelayedInit = nil
@@ -1140,8 +1092,8 @@ function VortexMeter:Update()
 	
 	if InCombat then
 		if now - LastDamageAction >= 2 and not Permanent then
-			if not VortexMeter:GroupInCombat() then
-				EndCombat()
+			if not VortexMeter.GroupInCombat() then
+				VortexMeter.EndCombat()
 			end
 		end
 		
@@ -1195,19 +1147,19 @@ end
 -- combat status, ie Esper Geist.
 -- @return true if any group members are in combat
  ]]
-function VortexMeter:GroupInCombat()
+function VortexMeter.GroupInCombat()
 	
 	if not GameLib.GetPlayerUnit() then
 		return false
 	end
 	
 	-- WHY DOES THE GAME SOMETIMES RETURN ISINCOMBAT FALSE WHEN IM IN COMBAT KSAJDFKSJDFKS
-	local bSelfInCombat = GameLib.GetPlayerUnit():IsInCombat() or self.bPetAffectingCombat or self.bInCombat
+	local bSelfInCombat = GameLib.GetPlayerUnit():IsInCombat() or VortexMeter.bPetAffectingCombat or VortexMeter.bInCombat
 	
 	local nMemberCount = GroupLib.GetMemberCount()
 	if nMemberCount == 0 then
-		self.bGroupInCombat = FixCombatBug(bSelfInCombat)
-		return self.bGroupInCombat
+		VortexMeter.bGroupInCombat = FixCombatBug(bSelfInCombat)
+		return VortexMeter.bGroupInCombat
 	end
 	
 	local bCombat = false
@@ -1227,7 +1179,7 @@ function VortexMeter:GroupInCombat()
 		bCombat = FixCombatBug(bSelfInCombat)
 	end
 	
-	self.bGroupInCombat = bCombat
+	VortexMeter.bGroupInCombat = bCombat
 	
 	return bCombat
 end
@@ -1235,12 +1187,33 @@ end
 
 function VortexMeter:SlashHandler(cmd, arg)
 	local list = {}
-	
 	for param in arg:gmatch("[^%s]+") do
 		tinsert(list, param)
 	end
-	SlashCommands[list[1]](unpack(list, 2, #list))
+
+	VortexMeter.SlashCommands[list[1]](unpack(list, 2, #list))
 end
+
+VortexMeter.SlashCommands = setmetatable({
+	show    = function() VortexMeter.On() end,
+	hide    = function() VortexMeter.Off() end,
+	toggle  = function() VortexMeter.Toggle() end,
+	default = function() VortexMeter.Default() end,
+	new     = function() VortexMeter.UI.NewWindow() end,
+	lock    = function() VortexMeter.UI.Lock(true) end,
+	unlock  = function() VortexMeter.UI.Lock(false) end,
+	config  = function() VortexMeter.ConfigInit() end,
+},
+{
+	__index = function (t, key)
+		return function ()
+			Print(L["Available commands:"])
+			for cmd, func in pairs(t) do
+				Print("- " .. cmd)
+			end
+		end
+	end
+})
 
 -- Register addon
 Apollo.RegisterAddon(VortexMeter)

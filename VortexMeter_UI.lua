@@ -932,6 +932,7 @@ function Modes.combats:update(window)
 	local rows = {}
 	local limit = min(#RM.combats, #window.frames.rows)
 	local ncombats = 0
+	local maxvalue = 0
 	for i = 1, limit do
 		local row = {}
 		local combat = RM.combats[i + window.scrollOffset]
@@ -940,6 +941,8 @@ function Modes.combats:update(window)
 			local stat = combat:getPreparedPlayerData(window.settings.sort, window.showEnemies).total / max(combat.duration, 1)
 			local hostile = combat:getHostile()
 			
+			if stat > maxvalue then maxvalue = stat end
+
 			row.leftLabel = FormatSeconds(combat.duration) .. " " .. hostile
 			row.rightLabel = NumberFormat(floor(stat))
 			row.value = stat
@@ -954,7 +957,7 @@ function Modes.combats:update(window)
 	
 	window:setGlobalLabel(window.selectedCombat:getPreparedPlayerData(window.settings.sort, window.showEnemies).total / max(window.selectedCombat.duration, 1))
 	
-	return rows, #RM.combats, RM.GetMaxValueCombat(window.settings.sort, window.showEnemies)
+	return rows, #RM.combats, maxvalue
 end
 
 -- Mode: Ability list
@@ -1161,13 +1164,6 @@ function RM.UI.Solo(bDisabled)
 	for i, window in ipairs(Windows) do
 		window.frames.solo:SetTextColor(color)
 	end
-end
-
-function RM.UI.Default()
-	RM.Off()
-	RM.UI.Destroy()
-	RM.UI.NewWindow()
-	RM.On()
 end
 
 function RM.UI.Reset()
