@@ -872,7 +872,7 @@ function VortexMeter.Toggle()
 	end
 end
 
-function VortexMeter.Reset()
+function VortexMeter.Clear()
 	VortexMeter.EndCombat()
 	
 	Units = {}
@@ -885,7 +885,7 @@ function VortexMeter.Reset()
 	
 	VortexMeter.combats = {}
 	
-	VortexMeter.UI.Reset()
+	VortexMeter.UI.Clear()
 end
 
 function VortexMeter.Default()

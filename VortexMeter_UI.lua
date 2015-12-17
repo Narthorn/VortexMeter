@@ -398,7 +398,7 @@ function RM:OnButtonConfig(wndHandler, wndControl, eMouseButton)
 end
 
 function RM:OnButtonClear(wndHandler, wndControl, eMouseButton)
-	RM.Reset()
+	RM.Clear()
 end
 
 function RM:OnButtonStart(wndHandler, wndControl, eMouseButton)
@@ -1153,7 +1153,7 @@ function RM.UI.Solo(bDisabled)
 	end
 end
 
-function RM.UI.Reset()
+function RM.UI.Clear()
 	for i, window in ipairs(Windows) do
 		window.selectedCombat = nil
 		window:setMode("combat")
