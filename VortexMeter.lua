@@ -22,7 +22,6 @@ VortexMeter = {
 		showPercent = true,
 		showAbsolute = true,
 		showShortNumber = false,
-		mergeAbilitiesByName = true, -- Review this, do we actually need it or is there a bug?
 		opacity = 0,
 		tooltips = true,
 		enabled = true,
@@ -357,8 +356,7 @@ function Player:getAbility(ability, sort)
 	local returnAbility
 	for _, interaction in pairs(self.interactions[sort]) do
 		for _, ability2 in pairs(interaction.abilities) do
-				if (VortexMeter.settings.mergeAbilitiesByName and (ability.name == ability2.name))
-				or (not VortexMeter.settings.mergeAbilitiesByName and (ability.detail == ability2.detail)) then
+			if ability.name == ability2.name then
 				if not returnAbility then
 					returnAbility = ability2:clone()
 				else
@@ -375,8 +373,7 @@ function Player:getAbilities(sort)
 		for _, ability in pairs(interaction.abilities) do
 			local found = false
 			for i, insertedAbility in ipairs(abilities) do
-				if (VortexMeter.settings.mergeAbilitiesByName and (insertedAbility.name == ability.name))
-				or (not VortexMeter.settings.mergeAbilitiesByName and (insertedAbility.detail == ability.detail)) then
+				if insertedAbility.name == ability.name then
 					found = true
 					insertedAbility:merge(ability)
 				end
@@ -392,8 +389,7 @@ function Player:getAbilities(sort)
 			for _, ability in pairs(interaction.abilities) do
 				local found = false
 				for i, insertedAbility in ipairs(abilities) do
-					if (VortexMeter.settings.mergeAbilitiesByName and (insertedAbility.name == ability.name))
-					or (not VortexMeter.settings.mergeAbilitiesByName and (insertedAbility.detail == ability.detail)) then
+					if insertedAbility.name == ability.name then
 						found = true
 						insertedAbility:merge(ability)
 					end
