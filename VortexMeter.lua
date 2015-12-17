@@ -27,7 +27,6 @@ VortexMeter = {
 		enabled = true,
 		updaterate = 0.1,
 		mousetransparancy = 0.5,
-		bFirstRun = true,
 	},
 	
 	-- Class colors taken directly from website
@@ -230,7 +229,7 @@ function Unit:new(detail)
 	self.owner = nil
 	
 	self.class = detail:GetClassId()
-	self.hostile = (GameLib.GetPlayerUnit():GetDispositionTo(detail) ~= ApolloUnit.CodeEnumDisposition.Friendly)
+	self.hostile = (GameLib.GetPlayerUnit() and GameLib.GetPlayerUnit():GetDispositionTo(detail) ~= ApolloUnit.CodeEnumDisposition.Friendly)
 	
 	return self
 end
@@ -897,36 +896,39 @@ function VortexMeter.Default()
 end
 
 function VortexMeter:OnLoad()
-	-- TODO: yuk..
+	-- Localization table
 	L = VortexMeter.l
 	
 	Apollo.LoadSprites("VortexMeterSprites.xml", "VortexMeterSprites")
 	self.xmlMainDoc = XmlDoc.CreateFromFile("VortexMeter.xml")
 	Event_FireGenericEvent("OneVersion_ReportAddonInfo", self.name, unpack(self.version))
-	
-	tinsert(VortexMeter.settings.windows, VortexMeter.GetDefaultWindowSettings())
-	
-	-- i'm done, i'm fucking done. fuck carbine, fuck OnRestore, fuck this retarded window handling and fuck everything
-	self.tmrDelayedInit = ApolloTimer.Create(0.1, false, "DelayedInit", self)
-end
 
-function VortexMeter:DelayedInit()
-	-- IT IS ASSUMED THAT SETTINGS ARE LOADED BY NOW
-	-- AND THAT ALL SPURIOUS WINDOW RESIZE EVENTS HAVE ALREADY BEEN FIRED
-	-- IF NOT YOU CAN GO FUCK YOURSELF
-	
 	-- Add interface button
 	Apollo.RegisterEventHandler("VortexMeter_Toggle", "Toggle", self)
-	self:OnInterfaceMenuList() -- oh look more stupid redundant code to avoid race conditions because carbine can't come up with proper dependency handling
+	self:OnInterfaceMenuList()
 	Apollo.RegisterEventHandler("InterfaceMenuListHasLoaded", "OnInterfaceMenuList", self)
 	
 	-- Register slash handler
 	Apollo.RegisterSlashCommand("vm", "SlashHandler", self)
 	Apollo.RegisterSlashCommand("vortex", "SlashHandler", self)
 	Apollo.RegisterSlashCommand("vortexmeter", "SlashHandler", self)
-	
-	-- Log other players (only the first time the addon is loaded)
-	if self.settings.bFirstRun then Apollo.SetConsoleVariable("cmbtlog.disableOtherPlayers", false) end
+
+	-- Add default window
+	tinsert(VortexMeter.settings.windows, VortexMeter.GetDefaultWindowSettings())
+
+	-- Wait 0s to let OnRestore() fire
+	self.tmrDelayedInit = ApolloTimer.Create(0, false, "DelayedInit", self)
+end
+
+function VortexMeter:DelayedInit()
+	self.tmrDelayedInit = nil
+
+	-- First-load-ever init stuff
+	if not self.bSettingsLoaded then
+		-- Set game variable to log other players
+		Apollo.SetConsoleVariable("cmbtlog.disableOtherPlayers", false)
+	end
+	self.bSettingsLoaded = nil
 	
 	-- Create update timer
 	self.timerPulse = ApolloTimer.Create(self.settings.updaterate, true, "Update", self)
@@ -937,8 +939,6 @@ function VortexMeter:DelayedInit()
 		self.settings.enabled = false
 		VortexMeter.On()
 	end
-	
-	self.tmrDelayedInit = nil
 end
 
 function VortexMeter:OnInterfaceMenuList()
@@ -947,8 +947,6 @@ end
 
 function VortexMeter:OnSave(eType)
 	if eType ~= GameLib.CodeEnumAddonSaveLevel.Character then return end
-	self.settings.bFirstRun = false
-	
 	return VortexMeter.deepcopy(self.settings)
 end
 
@@ -959,6 +957,7 @@ function VortexMeter:OnRestore(eType, tSavedSettings)
 			self.settings[key] = value
 		end
 	end
+	self.bSettingsLoaded = true
 end
 
 function VortexMeter:OnCombatLogHeal(tEventArgs)
@@ -1113,7 +1112,9 @@ function VortexMeter:Update()
 end
 
 function VortexMeter.GroupInCombat()
-	if GameLib.GetPlayerUnit():IsInCombat() then return true end
+	local player = GameLib.GetPlayerUnit()
+
+	if player and player:IsInCombat() then return true end
 	
 	for i=1, GroupLib.GetMemberCount() do
 		local tUnit = GroupLib.GetUnitForGroupMember(i)
