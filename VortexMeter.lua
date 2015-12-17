@@ -666,6 +666,7 @@ function Combat:linkPetToOwner(pet)
 	end
 end
 
+--
 
 local function AddGlobalAbility(info)
 	local key = info.ability:GetId() .. (info.periodic and "1" or "0")
@@ -697,39 +698,6 @@ local function AddGlobalUnit(detail, owner)
 	end
 	
 	return unit
-end
-
-function VortexMeter.NewCombat(permanent)
-	if InCombat then
-		return
-	end
-	
-	if not VortexMeter.overallCombat then
-		VortexMeter.overallCombat = Combat:new(true)
-		tinsert(VortexMeter.combats, VortexMeter.overallCombat)
-	end
-	
-	VortexMeter.CurrentCombat = Combat:new(false)
-	InCombat = true
-	Permanent = not not permanent
-	tinsert(VortexMeter.combats, VortexMeter.CurrentCombat)
-	
-	VortexMeter.UI.NewCombat()
-end
-
-function VortexMeter.EndCombat(durationIsCallTime)
-	if not InCombat then
-		return
-	end
-	
-	VortexMeter.CurrentCombat:endCombat(durationIsCallTime)
-	VortexMeter.overallCombat.previousDuration = VortexMeter.overallCombat.previousDuration + VortexMeter.CurrentCombat.duration
-	VortexMeter.overallCombat.duration = VortexMeter.overallCombat.previousDuration
-	InCombat = false
-	Permanent = false
-	
-	VortexMeter.UI.Update()
-	VortexMeter.UI.EndCombat()
 end
 
 local function CombatEventsHandler(info, statType, damageAction)
@@ -827,74 +795,6 @@ local function CombatEventsHandler(info, statType, damageAction)
 	end
 end
 
-function VortexMeter.On()
-	if VortexMeter.settings.enabled then return end
-	VortexMeter.settings.enabled = true
-	VortexMeter.UI.Visible(true)
-	
-	Apollo.RegisterEventHandler("CombatLogDamage",          "OnCombatLogDamage",       VortexMeter)
-	Apollo.RegisterEventHandler("CombatLogDamageShields",   "OnCombatLogDamage",       VortexMeter)
-	Apollo.RegisterEventHandler("CombatLogReflect",         "OnCombatLogDamage",       VortexMeter)
-	Apollo.RegisterEventHandler("CombatLogMultiHit",        "OnCombatLogMultiHit",     VortexMeter)
-	Apollo.RegisterEventHandler("CombatLogMultiHitShields", "OnCombatLogMultiHit",     VortexMeter)
-	Apollo.RegisterEventHandler("CombatLogHeal",            "OnCombatLogHeal",         VortexMeter)
-	Apollo.RegisterEventHandler("CombatLogMultiHeal",       "OnCombatLogMultiHeal",    VortexMeter)
-	Apollo.RegisterEventHandler("CombatLogDeflect",         "OnCombatLogDeflect",      VortexMeter)
-	Apollo.RegisterEventHandler("CombatLogTransference",    "OnCombatLogTransference", VortexMeter)
-	Apollo.RegisterEventHandler("CombatLogCCState",         "OnCombatLogCCState",      VortexMeter)
-	
-	VortexMeter.timerPulse:Start()
-end
-
-function VortexMeter.Off()
-	VortexMeter.settings.enabled = false
-	VortexMeter.UI.Visible(false)
-	
-	Apollo.RemoveEventHandler("CombatLogDamage",          VortexMeter)
-	Apollo.RemoveEventHandler("CombatLogDamageShields",   VortexMeter)
-	Apollo.RemoveEventHandler("CombatLogReflect",         VortexMeter)
-	Apollo.RemoveEventHandler("CombatLogMultiHit",        VortexMeter)
-	Apollo.RemoveEventHandler("CombatLogMultiHitShields", VortexMeter)
-	Apollo.RemoveEventHandler("CombatLogHeal",            VortexMeter)
-	Apollo.RemoveEventHandler("CombatLogMultiHeal",       VortexMeter)
-	Apollo.RemoveEventHandler("CombatLogDeflect",         VortexMeter)
-	Apollo.RemoveEventHandler("CombatLogTransference",    VortexMeter)
-	Apollo.RemoveEventHandler("CombatLogCCState",         VortexMeter)
-	
-	VortexMeter.timerPulse:Stop()
-end
-
-function VortexMeter.Toggle()
-	if VortexMeter.settings.enabled then
-		VortexMeter.Off()
-	else
-		VortexMeter.On()
-	end
-end
-
-function VortexMeter.Clear()
-	VortexMeter.EndCombat()
-	
-	Units = {}
-	Abilities = {}
-	VortexMeter.CurrentCombat = {}
-	VortexMeter.overallCombat = nil
-	
-	InCombat = false
-	NeedsUpdate = false
-	
-	VortexMeter.combats = {}
-	
-	VortexMeter.UI.Clear()
-end
-
-function VortexMeter.Default()
-	VortexMeter.Off()
-	VortexMeter.UI.Destroy()
-	VortexMeter.UI.NewWindow()
-	VortexMeter.On()
-end
-
 function VortexMeter:OnLoad()
 	-- Localization table
 	L = VortexMeter.l
@@ -936,7 +836,6 @@ function VortexMeter:DelayedInit()
 	
 	VortexMeter.UI.Init()
 	if self.settings.enabled then
-		self.settings.enabled = false
 		VortexMeter.On()
 	end
 end
@@ -1124,14 +1023,112 @@ function VortexMeter.GroupInCombat()
 	return false
 end
 
-function VortexMeter:SlashHandler(cmd, arg)
-	local list = {}
-	for param in arg:gmatch("[^%s]+") do
-		tinsert(list, param)
-	end
+-- VortexMeter API
 
-	VortexMeter.SlashCommands[list[1]](unpack(list, 2, #list))
+function VortexMeter.On()
+	if VortexMeter.enabled then return end
+	VortexMeter.enabled = true
+	VortexMeter.settings.enabled = true
+	VortexMeter.UI.Visible(true)
+	
+	Apollo.RegisterEventHandler("CombatLogDamage",          "OnCombatLogDamage",       VortexMeter)
+	Apollo.RegisterEventHandler("CombatLogDamageShields",   "OnCombatLogDamage",       VortexMeter)
+	Apollo.RegisterEventHandler("CombatLogReflect",         "OnCombatLogDamage",       VortexMeter)
+	Apollo.RegisterEventHandler("CombatLogMultiHit",        "OnCombatLogMultiHit",     VortexMeter)
+	Apollo.RegisterEventHandler("CombatLogMultiHitShields", "OnCombatLogMultiHit",     VortexMeter)
+	Apollo.RegisterEventHandler("CombatLogHeal",            "OnCombatLogHeal",         VortexMeter)
+	Apollo.RegisterEventHandler("CombatLogMultiHeal",       "OnCombatLogMultiHeal",    VortexMeter)
+	Apollo.RegisterEventHandler("CombatLogDeflect",         "OnCombatLogDeflect",      VortexMeter)
+	Apollo.RegisterEventHandler("CombatLogTransference",    "OnCombatLogTransference", VortexMeter)
+	Apollo.RegisterEventHandler("CombatLogCCState",         "OnCombatLogCCState",      VortexMeter)
+	
+	VortexMeter.timerPulse:Start()
 end
+
+function VortexMeter.Off()
+	VortexMeter.enabled = false
+	VortexMeter.settings.enabled = false
+	VortexMeter.UI.Visible(false)
+	
+	Apollo.RemoveEventHandler("CombatLogDamage",          VortexMeter)
+	Apollo.RemoveEventHandler("CombatLogDamageShields",   VortexMeter)
+	Apollo.RemoveEventHandler("CombatLogReflect",         VortexMeter)
+	Apollo.RemoveEventHandler("CombatLogMultiHit",        VortexMeter)
+	Apollo.RemoveEventHandler("CombatLogMultiHitShields", VortexMeter)
+	Apollo.RemoveEventHandler("CombatLogHeal",            VortexMeter)
+	Apollo.RemoveEventHandler("CombatLogMultiHeal",       VortexMeter)
+	Apollo.RemoveEventHandler("CombatLogDeflect",         VortexMeter)
+	Apollo.RemoveEventHandler("CombatLogTransference",    VortexMeter)
+	Apollo.RemoveEventHandler("CombatLogCCState",         VortexMeter)
+	
+	VortexMeter.timerPulse:Stop()
+end
+
+function VortexMeter.Toggle()
+	if VortexMeter.settings.enabled then
+		VortexMeter.Off()
+	else
+		VortexMeter.On()
+	end
+end
+
+function VortexMeter.Clear()
+	VortexMeter.EndCombat()
+	
+	Units = {}
+	Abilities = {}
+	VortexMeter.CurrentCombat = {}
+	VortexMeter.overallCombat = nil
+	
+	InCombat = false
+	NeedsUpdate = false
+	
+	VortexMeter.combats = {}
+	
+	VortexMeter.UI.Clear()
+end
+
+function VortexMeter.Default()
+	VortexMeter.Off()
+	VortexMeter.UI.Destroy()
+	VortexMeter.UI.NewWindow()
+	VortexMeter.On()
+end
+
+function VortexMeter.NewCombat(permanent)
+	if InCombat then
+		return
+	end
+	
+	if not VortexMeter.overallCombat then
+		VortexMeter.overallCombat = Combat:new(true)
+		tinsert(VortexMeter.combats, VortexMeter.overallCombat)
+	end
+	
+	VortexMeter.CurrentCombat = Combat:new(false)
+	InCombat = true
+	Permanent = not not permanent
+	tinsert(VortexMeter.combats, VortexMeter.CurrentCombat)
+	
+	VortexMeter.UI.NewCombat()
+end
+
+function VortexMeter.EndCombat(durationIsCallTime)
+	if not InCombat then
+		return
+	end
+	
+	VortexMeter.CurrentCombat:endCombat(durationIsCallTime)
+	VortexMeter.overallCombat.previousDuration = VortexMeter.overallCombat.previousDuration + VortexMeter.CurrentCombat.duration
+	VortexMeter.overallCombat.duration = VortexMeter.overallCombat.previousDuration
+	InCombat = false
+	Permanent = false
+	
+	VortexMeter.UI.Update()
+	VortexMeter.UI.EndCombat()
+end
+
+-- Slash commands
 
 VortexMeter.SlashCommands = setmetatable({
 	show    = function() VortexMeter.On() end,
@@ -1153,6 +1150,15 @@ VortexMeter.SlashCommands = setmetatable({
 		end
 	end
 })
+
+function VortexMeter:SlashHandler(cmd, arg)
+	local list = {}
+	for param in arg:gmatch("[^%s]+") do
+		tinsert(list, param)
+	end
+
+	VortexMeter.SlashCommands[list[1]](unpack(list, 2, #list))
+end
 
 -- Register addon
 Apollo.RegisterAddon(VortexMeter)
