@@ -1171,8 +1171,7 @@ end
 
 function RM.UI.Destroy()
 	for i=#Windows,1,-1 do
-		Windows[i].frames.base:Destroy()
-		tremove(Windows, i)
+		tremove(Windows, i).frames.base:Destroy()
 		tremove(RM.settings.windows, i)
 	end
 end
@@ -1193,8 +1192,7 @@ function RM.UI.Close(window)
 	
 	for i = 1, #Windows do
 		if window == Windows[i] then
-			Windows[i].frames.base:Destroy()
-			tremove(Windows, i)
+			tremove(Windows, i).frames.base:Destroy()
 			tremove(RM.settings.windows, i)
 			return
 		end
