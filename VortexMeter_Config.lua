@@ -4,7 +4,7 @@
 --- Original addon : Rift Meter by Vince (http://www.curse.com/addons/rift/rift-meter)
 
 local RM = Apollo.GetAddon("VortexMeter")
-local L = RM.l
+local L = RM.L
 
 function RM.ConfigInit()
 	local window = RM.configWindow

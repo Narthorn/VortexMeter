@@ -7,7 +7,7 @@
 
 local RM = Apollo.GetAddon("VortexMeter")
 
-local L = RM.l
+local L = RM.L
 local NumberFormat = RM.numberFormat
 local FormatSeconds = RM.formatSeconds
 local BuildFormat = RM.BuildFormat

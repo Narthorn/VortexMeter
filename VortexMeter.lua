@@ -48,9 +48,9 @@ VortexMeter = {
 		[GameLib.CodeEnumDamageType.Fall] = {0.6, 0.6, 0.6},
 		[GameLib.CodeEnumDamageType.Suffocate] = {0.6, 0.6, 0.6},
 	},
-}
 
-local L
+	L = setmetatable({}, {__index = function(self, key) return tostring(key) end})
+}
 
 local pairs = pairs
 local ipairs = ipairs
@@ -73,6 +73,7 @@ local InCombat = false
 local NeedsUpdate = false
 local Permanent = false -- manual combat start
 
+local L = VortexMeter.L
 
 function VortexMeter.GetDefaultWindowSettings()
 	local defaults = {
@@ -796,9 +797,6 @@ local function CombatEventsHandler(info, statType, damageAction)
 end
 
 function VortexMeter:OnLoad()
-	-- Localization table
-	L = VortexMeter.l
-	
 	Apollo.LoadSprites("VortexMeterSprites.xml", "VortexMeterSprites")
 	self.xmlMainDoc = XmlDoc.CreateFromFile("VortexMeter.xml")
 	Event_FireGenericEvent("OneVersion_ReportAddonInfo", self.name, unpack(self.version))
