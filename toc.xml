@@ -2,6 +2,7 @@
 <Addon Author="Vince, Vim" APIVersion="11" Name="VortexMeter" Description="Vortex Meter" Version="">
 	<Script Name="VortexMeter.lua"/>
 	<Script Name="VortexMeter_Utilities.lua"/>
+	<Script Name="VortexMeter_Abilities.lua"/>
 	<Script Name="VortexMeter_UI.lua"/>
 	<Script Name="VortexMeter_Config.lua"/>
 	<Script Name="locales/English.lua"/>

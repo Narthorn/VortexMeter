@@ -49,6 +49,11 @@ VortexMeter = {
 		[GameLib.CodeEnumDamageType.Suffocate] = {0.6, 0.6, 0.6},
 	},
 
+	Meta = {
+		Ability = {},
+		AbilityDetail = {},
+	},
+
 	L = setmetatable({}, {__index = function(self, key) return tostring(key) end})
 }
 
@@ -57,6 +62,7 @@ local ipairs = ipairs
 local tinsert = table.insert
 local tremove = table.remove
 local tsort = table.sort
+local tempty = function(t) for k in pairs(t) do t[k] = nil end end
 local max = math.max
 local min = math.min
 local round = function(val) return math.floor(val + .5) end
@@ -74,6 +80,8 @@ local NeedsUpdate = false
 local Permanent = false -- manual combat start
 
 local L = VortexMeter.L
+local Ability = VortexMeter.Meta.Ability
+local AbilityDetail = VortexMeter.Meta.AbilityDetail
 
 function VortexMeter.GetDefaultWindowSettings()
 	local defaults = {
@@ -85,136 +93,6 @@ function VortexMeter.GetDefaultWindowSettings()
 	defaults.x = (Apollo.GetDisplaySize().nWidth - defaults.width) / 2
 	defaults.y = Apollo.GetDisplaySize().nHeight / 2
 	return defaults
-end
-
-local Ability = {}
-Ability.__index = Ability
-function Ability:new(info)
-	local self = {}
-	if info.ability:GetId() ~= nil then
-		self.detail = Abilities[info.ability:GetId() .. (info.periodic and "1" or "0")]
-		self.name = self.detail.name
-	end
-	self.type = info.damagetype
-	self.total = 0
-	self.totalHit = 0
-	self.totalCrit = 0
-	self.totalMultiHit = 0
-	self.max = 0
-	self.min = 0
-	self.hits = 0
-	self.crits = 0
-	self.multihits = 0
-	self.swings = 0
-	self.filtered = 0
-	self.interrupts = 0
-	self.deflects = 0
-
-	if info.owner then
-	  self.name = self.name .. " (Pet: " .. info.caster:GetName() .. ")"
-	elseif info.periodic then
-	  self.name = self.name .. " (Dot)"
-	end
-
-	return setmetatable(self, Ability)
-end
-function Ability:clone()
-	local clone = {
-		detail = self.detail,
-		name = self.name,
-		total = self.total,
-		type = self.type,
-		totalHit = self.totalHit,
-		totalCrit = self.totalCrit,
-		totalMultiHit = self.totalMultiHit,
-		max = self.max,
-		min = self.min,
-		hits = self.hits,
-		crits = self.crits,
-		multihits = self.multihits,
-		swings = self.swings,
-		filtered = self.filtered,
-		interrupts = self.interrupts,
-		deflects = self.deflects,
-	}
-
-	return setmetatable(clone, Ability)
-end
-function Ability:merge(otherAbility)
-	self.total = self.total + otherAbility.total
-	self.totalHit = self.totalHit + otherAbility.totalHit
-	self.totalCrit = self.totalCrit + otherAbility.totalCrit
-	self.totalMultiHit = self.totalMultiHit + otherAbility.totalMultiHit
-	self.max = max(self.max, otherAbility.max)
-	if self.min == 0 then
-		self.min = otherAbility.min
-	else
-		if otherAbility.min > 0 then
-			self.min = min(self.min, otherAbility.min)
-		end
-	end
-	self.hits = self.hits + otherAbility.hits
-	self.crits = self.crits + otherAbility.crits
-	self.multihits = self.multihits + otherAbility.multihits
-	self.swings = self.swings + otherAbility.swings
-	self.filtered = self.filtered + otherAbility.filtered
-	self.interrupts = self.interrupts + otherAbility.interrupts
-	self.deflects = self.deflects + otherAbility.deflects
-end
-function Ability:add(statType, amount, info)
-
-	self.total = self.total + amount
-	if not info.multihit then self.swings = self.swings + 1 end
-
-	if statType == "deflects" or statType == "interrupts" then
-		if not info.multihit then
-			self[statType] = self[statType] + 1
-		end
-	else
-		if info.multihit then
-			self.multihits = self.multihits + 1
-			self.totalMultiHit = self.totalMultiHit + amount
-		else
-			if info.crit then
-				self.crits = self.crits + 1
-				self.totalCrit = self.totalCrit + amount
-			else
-				self.hits = self.hits + 1
-				self.totalHit = self.totalHit + amount
-			end
-		
-			if amount > self.max then self.max = amount end
-			if (amount < self.min or self.min == 0) then self.min = amount end
-		end
-	end
-end
-function Ability:getPreparedAbilityStatData(combat)
-	local stats = {
-		{ name = L["total"], value = VortexMeter.numberFormat(self.total) },
-		{ name = L["Min/Avg/Max"], value = VortexMeter.numberFormat(self.min) .. " / " .. VortexMeter.numberFormat(round(self.total / self.swings)) .. " / " .. VortexMeter.numberFormat(self.max) },
-		{ name = L["Average Hit/Crit/Multi-Hit"], value = VortexMeter.numberFormat(round(self.totalHit / max(self.hits, 1))) .. " / " .. VortexMeter.numberFormat(round(self.totalCrit / max(self.crits, 1))) .. " / " .. VortexMeter.numberFormat(round(self.totalMultiHit / max(self.multihits, 1))) },
-		{ name = L["Crit Total (%)"], value = VortexMeter.numberFormat(self.totalCrit) .. " (" .. ("%.2f%%"):format(self.totalCrit / max(self.total,1) * 100) .. ")" },
-		{ name = L["Crit Rate"], value = ("%.2f%%"):format(self.crits / self.swings * 100) },
-		{ name = L["Multi-Hit Total (%)"], value = VortexMeter.numberFormat(self.totalMultiHit) .. " (" .. ("%.2f%%"):format(self.totalMultiHit / max(self.total,1) * 100) .. ")"},
-		{ name = L["Multi-Hit Rate"], value = ("%.2f%%"):format(self.multihits / self.swings * 100) },
-		{ name = L["Swings (Per second)"], value = VortexMeter.numberFormat(self.swings) .. " (" .. ("%.2f"):format(self.swings / max(combat.duration, 1)) .. ")" },
-		{ name = L["Hits / Crits / Multi-Hits"], value = VortexMeter.numberFormat(self.hits) .. " / " .. VortexMeter.numberFormat(self.crits) .. " / " .. VortexMeter.numberFormat(self.multihits)},
-		{ name = L["Deflects (%)"], value = VortexMeter.numberFormat(self.deflects) .. " (" .. ("%.2f%%"):format(self.deflects / self.swings * 100) .. ")" },
-		{ name = L["Interrupts"], value = VortexMeter.numberFormat(self.interrupts) },
-	}
-
-	return stats
-end
-
-local AbilityDetail = {}
-function AbilityDetail:new(info)
-	local self = {}
-	self.name = info:GetName()
-	self.icon = ""
-	self.type = info.type or "none"
-	self.filter = false
-	
-	return self
 end
 
 local ApolloUnit = Unit
@@ -1074,7 +952,7 @@ function VortexMeter.Clear()
 	VortexMeter.EndCombat()
 	
 	Units = {}
-	Abilities = {}
+	tempty(Abilities)
 	VortexMeter.CurrentCombat = {}
 	VortexMeter.overallCombat = nil
 	
