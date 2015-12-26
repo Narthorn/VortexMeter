@@ -72,7 +72,6 @@ local VortexMeter = VortexMeter
 local Units = VortexMeter.Units
 local Abilities = VortexMeter.Abilities
 
-local LastDamageAction = 0
 local LastUpdate = 0
 local LastTimerUpdate = 0
 local InCombat = false
@@ -104,6 +103,7 @@ function Combat:new(overall)
 	self.overall = overall
 	self.duration = 0
 	self.previousDuration = 0
+	self.lastDamageAction = 0
 	self.players = {}
 	self.hostiles = {}
 	self.hasBoss = false
@@ -111,7 +111,7 @@ function Combat:new(overall)
 end
 function Combat:End()
 	-- snap duration back to time of last recorded event
-	self.duration = LastDamageAction - self.startTime
+	self.duration = self.lastDamageAction - self.startTime
 end
 function Combat:getPreparedPlayerData(sort, showNpcs)
 	local data = {
@@ -276,7 +276,7 @@ local function CombatEventsHandler(info, statType, damageAction)
 	
 	if InCombat then
 		if damageAction then-- and caster.inGroup then
-			LastDamageAction = GameLib.GetGameTime()
+			VortexMeter.CurrentCombat.lastDamageAction = GameLib.GetGameTime()
 			NeedsUpdate = true
 		end
 	else
@@ -533,7 +533,7 @@ function VortexMeter:Update()
 	--local PlayerIsInCombat = player:IsInCombat()
 	
 	if InCombat then
-		if now - LastDamageAction >= 2 and not Permanent then
+		if now - VortexMeter.CurrentCombat.lastDamageAction >= 2 and not Permanent then
 			if not VortexMeter.GroupInCombat() then
 				VortexMeter.EndCombat()
 			end
