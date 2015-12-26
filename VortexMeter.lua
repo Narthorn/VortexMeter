@@ -93,24 +93,6 @@ function VortexMeter.GetDefaultWindowSettings()
 	return defaults
 end
 
-local ApolloUnit = Unit
-local Unit = {}
-function Unit:new(detail)
-	local self = {}
-	self.name = detail:GetName()
-	self.player = detail:IsACharacter()
-	self.id = detail:GetId()
-	--self.inGroup = detail:IsInYourGroup() or detail:IsThePlayer()
-	self.self = false
-	self.isPet = false
-	self.owner = nil
-	
-	self.class = detail:GetClassId()
-	self.hostile = (GameLib.GetPlayerUnit() and GameLib.GetPlayerUnit():GetDispositionTo(detail) ~= ApolloUnit.CodeEnumDisposition.Friendly)
-	
-	return self
-end
-
 local Player = {}
 Player.__index = Player
 function Player:new(unit, reduced)
@@ -567,16 +549,22 @@ local function AddGlobalUnit(detail, owner)
 	local unit = Units[id]
 	
 	if not unit then
-		unit = Unit:new(detail)
-		if detail:IsThePlayer() then unit.self = true end
+		unit = {
+			name = detail:GetName(),
+			player = detail:IsACharacter(),
+			id = detail:GetId(),
+			--inGroup = detail:IsInYourGroup() or detail:IsThePlayer(),
+			self = detail:IsThePlayer(),
+			class = detail:GetClassId(),
+			hostile = (GameLib.GetPlayerUnit() and GameLib.GetPlayerUnit():GetDispositionTo(detail) ~= Unit.CodeEnumDisposition.Friendly),
+		}
+	
 		Units[id] = unit
 	end
-	
-	-- search for pet owner if pet
-	if owner then
+
+	if owner and not unit.isPet then
 		unit.isPet = true
 		unit.owner = AddGlobalUnit(owner, nil)
-		--unit.inGroup = unit.owner.inGroup
 	end
 	
 	return unit
@@ -614,8 +602,8 @@ local function CombatEventsHandler(info, statType, damageAction)
 		return
 	end
 	
-	if info.caster:GetRank() == ApolloUnit.CodeEnumRank.Elite or
-	   info.target:GetRank() == ApolloUnit.CodeEnumRank.Elite then
+	if info.caster:GetRank() == Unit.CodeEnumRank.Elite or
+	   info.target:GetRank() == Unit.CodeEnumRank.Elite then
 		VortexMeter.CurrentCombat.hasBoss = true
 	end
 	
@@ -954,7 +942,7 @@ end
 function VortexMeter.Clear()
 	VortexMeter.EndCombat()
 	
-	Units = {}
+	tempty(Units)
 	tempty(Abilities)
 	VortexMeter.CurrentCombat = {}
 	VortexMeter.overallCombat = nil
