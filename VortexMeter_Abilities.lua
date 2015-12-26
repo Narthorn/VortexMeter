@@ -134,14 +134,3 @@ function Ability:getPreparedAbilityStatData(combat)
 
 	return stats
 end
-
---- TODO remove this
-AbilityDetail = VortexMeter.Meta.AbilityDetail
-function AbilityDetail:new(info)
-	local self = {}
-	self.name = info:GetName()
-	self.icon = ""
-	self.type = info.type or "none"
-	self.filter = false
-	return self
-end

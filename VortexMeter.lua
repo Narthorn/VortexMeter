@@ -51,7 +51,6 @@ VortexMeter = {
 
 	Meta = {
 		Ability = {},
-		AbilityDetail = {},
 	},
 
 	L = setmetatable({}, {__index = function(self, key) return tostring(key) end})
@@ -81,7 +80,6 @@ local Permanent = false -- manual combat start
 
 local L = VortexMeter.L
 local Ability = VortexMeter.Meta.Ability
-local AbilityDetail = VortexMeter.Meta.AbilityDetail
 
 function VortexMeter.GetDefaultWindowSettings()
 	local defaults = {
@@ -354,7 +352,12 @@ function Player:createFakeAbility()
 	local fakeAbility = Ability:new({ability = {GetId = function() return nil end}})
 	local backup = fakeAbility.getPreparedAbilityStatData
 	local player = self
-	fakeAbility.detail = AbilityDetail:new({GetName = function() return L["Total"] end})
+	fakeAbility.detail = {
+		name =  L["Total"],
+		icon = "",
+		type = "none",
+		filter = false,
+	}
 	fakeAbility.name = L["Total"]
 	
 	function fakeAbility:getPreparedAbilityStatData(combat, sort)
