@@ -58,32 +58,23 @@ VortexMeter = {
 	L = setmetatable({}, {__index = function(self, key) return tostring(key) end})
 }
 
-local pairs = pairs
-local ipairs = ipairs
-local tinsert = table.insert
-local tremove = table.remove
-local tsort = table.sort
-local tempty = function(t) for k in pairs(t) do t[k] = nil end end
-local max = math.max
-local min = math.min
-local round = function(val) return math.floor(val + .5) end
-local setmetatable = setmetatable
 local VortexMeter = VortexMeter
 
 local Abilities = VortexMeter.Abilities
 local Combats = VortexMeter.Combats
 local Units = VortexMeter.Units
 
+local Ability = VortexMeter.Meta.Ability
+local Combat = VortexMeter.Meta.Combat
+local Player = VortexMeter.Meta.Player
+
+local L = VortexMeter.L
+
 local LastUpdate = 0
 local LastTimerUpdate = 0
 local InCombat = false
 local NeedsUpdate = false
 local Permanent = false -- manual combat start
-
-local L = VortexMeter.L
-local Ability = VortexMeter.Meta.Ability
-local Combat = VortexMeter.Meta.Combat
-local Player = VortexMeter.Meta.Player
 
 function VortexMeter.GetDefaultWindowSettings()
 	local defaults = {
@@ -246,7 +237,7 @@ function VortexMeter:OnLoad()
 	Apollo.RegisterSlashCommand("vortexmeter", "SlashHandler", self)
 
 	-- Add default window
-	tinsert(VortexMeter.settings.windows, VortexMeter.GetDefaultWindowSettings())
+	table.insert(VortexMeter.settings.windows, VortexMeter.GetDefaultWindowSettings())
 
 	-- Wait 0s to let OnRestore() fire
 	self.tmrDelayedInit = ApolloTimer.Create(0, false, "DelayedInit", self)
@@ -507,9 +498,9 @@ end
 function VortexMeter.Clear()
 	VortexMeter.EndCombat()
 	
-	tempty(Abilities)
-	tempty(Combats)
-	tempty(Units)
+	table.empty(Abilities)
+	table.empty(Combats)
+	table.empty(Units)
 
 	VortexMeter.CurrentCombat = {}
 	VortexMeter.overallCombat = nil
@@ -534,13 +525,13 @@ function VortexMeter.NewCombat(permanent)
 	
 	if not VortexMeter.overallCombat then
 		VortexMeter.overallCombat = Combat:new(true)
-		tinsert(VortexMeter.Combats, VortexMeter.overallCombat)
+		table.insert(VortexMeter.Combats, VortexMeter.overallCombat)
 	end
 	
 	VortexMeter.CurrentCombat = Combat:new(false)
 	InCombat = true
 	Permanent = not not permanent
-	tinsert(VortexMeter.Combats, VortexMeter.CurrentCombat)
+	table.insert(VortexMeter.Combats, VortexMeter.CurrentCombat)
 	
 	VortexMeter.UI.NewCombat()
 end
@@ -589,7 +580,7 @@ VortexMeter.SlashCommands = setmetatable({
 function VortexMeter:SlashHandler(cmd, arg)
 	local list = {}
 	for param in arg:gmatch("[^%s]+") do
-		tinsert(list, param)
+		table.insert(list, param)
 	end
 
 	VortexMeter.SlashCommands[list[1]](unpack(list, 2, #list))

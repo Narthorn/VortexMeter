@@ -12,20 +12,6 @@ local NumberFormat = RM.numberFormat
 local FormatSeconds = RM.formatSeconds
 local BuildFormat = RM.BuildFormat
 
-local pairs = pairs
-local ipairs = ipairs
-local tinsert = table.insert
-local tsort = table.sort
-local tremove = table.remove
-local setmetatable = setmetatable
-local max = math.max
-local min = math.min
-local floor = math.floor
-local ceil = math.ceil
-local round = function(val) return math.floor(val + .5) end
-
-local Dummy = function() end
-
 local Windows = {}
 RM.Windows = Windows
 
@@ -176,7 +162,7 @@ function Window:update()
 	
 	self.lastData = self.lastData or {}
 	self.rowCount = self.rowCount or 0
-	self.maxValue = max(self.maxValue or 1, 1)
+	self.maxValue = math.max(self.maxValue or 1, 1)
 	
 	for i = 1, self.settings.rows do
 		local row = self.frames.rows[i]
@@ -196,13 +182,13 @@ function Window:update()
 				data.rightLabel = ""
 			end
 			if not data.leftClick then
-				data.leftClick = Dummy
+				data.leftClick = function() end
 			end
 			if not data.middleClick then
-				data.middleClick = Dummy
+				data.middleClick = function() end
 			end
 			if not data.rightClick then
-				data.rightClick = Dummy
+				data.rightClick = function() end
 			end
 			if data.icon and data.icon ~= "" then
 				row.icon:SetSprite(data.icon)
@@ -244,17 +230,17 @@ function Window:setRows(count)
 	local rowCount = #self.frames.rows
 	local rowpos = 1 + rowCount * (self.settings.rowHeight + 1)
 	
-	count = max(count, 1)
+	count = math.max(count, 1)
 
 	if rowCount ~= count then
 	
 		self.settings.rows = count
 		
 		for i = count + 1, rowCount do
-			tremove(self.frames.rows).base:Destroy()
+			table.remove(self.frames.rows).base:Destroy()
 		end
 
-		self.scrollOffset = max(min(self.scrollOffset, rowCount - #self.frames.rows), 0)
+		self.scrollOffset = math.max(math.min(self.scrollOffset, rowCount - #self.frames.rows), 0)
 		
 		for i = rowCount + 1, count do
 			local base = Apollo.LoadForm(RM.xmlMainDoc, "Row", self.frames.background, RM)
@@ -298,7 +284,7 @@ function Window:setMode(mode, ...)
 	end
 	
 	if newMode ~= self.selectedMode then -- prevent endless loop
-		tinsert(self.history, self.selectedMode)
+		table.insert(self.history, self.selectedMode)
 		self.selectedMode = newMode
 	end
 	
@@ -318,7 +304,7 @@ function Window:getLastMode()
 		index = index - 1
 	end
 	
-	return self.history[max(index, 1)]
+	return self.history[math.max(index, 1)]
 end
 function Window:getCurrentMode()
 	return self.selectedMode
@@ -378,7 +364,7 @@ function RM:OnFrameWindowMove(wndHandler, wndControl, left, top, right, bottom)
 	if (bottom-top) == (45 + #window.frames.rows * (window.settings.rowHeight + 1)) then return end
 
 	-- have to use actual cursor position instead of height to account for repeated movements smaller than rowHeight
-	window:setRows(round((Apollo.GetMouse().y - window.settings.y - 45) / (window.settings.rowHeight+1)))
+	window:setRows(math.round((Apollo.GetMouse().y - window.settings.y - 45) / (window.settings.rowHeight+1)))
 end
 
 function RM:OnButtonSolo(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY, bDoubleClick, bStopPropagation )
@@ -449,7 +435,7 @@ function RM:OnBackgroundScroll(wndHandler, wndControl, nLastRelativeMouseX, nLas
 	local window = wndHandler:GetParent():GetData()
 	
 	local val = window.scrollOffset + ((fScrollAmount < 0) and 1 or -1)
-	val = max(0, min(val, window.rowCount - #window.frames.rows))
+	val = math.max(0, math.min(val, window.rowCount - #window.frames.rows))
 	if val ~= window.scrollOffset then
 		window.scrollOffset = val
 		window:update()
@@ -574,7 +560,7 @@ function Modes.modes:init(window)
 end
 function Modes.modes:update(window)
 	local rows = {}
-	local limit = min(#Sortmodes, #window.frames.rows)
+	local limit = math.min(#Sortmodes, #window.frames.rows)
 	for i = 1, limit do
 		local data = {}
 		local lastMode = window:getLastMode()
@@ -623,8 +609,8 @@ function Modes.combat:update(window)
 	
 	local rows = {}
 	local selfFound = false
-	local limit = min(data.count, #window.frames.rows)
-	local duration = max(window.selectedCombat.duration, 1)
+	local limit = math.min(data.count, #window.frames.rows)
+	local duration = math.max(window.selectedCombat.duration, 1)
 	for i = 1, limit do
 		local row = {}
 		local player = data.players[i + window.scrollOffset]
@@ -646,7 +632,7 @@ function Modes.combat:update(window)
 		end
 		
 		row.leftLabel = (RM.settings.showRankNumber and i + window.scrollOffset .. ". " or "") .. player.name
-		row.rightLabel = BuildFormat(NumberFormat(player.value), player.value / duration, player.value / max(data.total, 1) * 100)
+		row.rightLabel = BuildFormat(NumberFormat(player.value), player.value / duration, player.value / math.max(data.total, 1) * 100)
 		
 		row.color = RM.classColors[player.ref.detail.class] or {1, 1, 1}
 		row.value = player.value
@@ -662,7 +648,7 @@ function Modes.combat:update(window)
 			end
 		end
 		
-		tinsert(rows, row)
+		table.insert(rows, row)
 	end
 	
 	window:setGlobalLabel(data.total / duration)
@@ -678,15 +664,15 @@ function Modes.combat:getReportText(window)
 	if not window.selectedCombat then return end
 	
 	local data = window.selectedCombat:getPreparedPlayerData(window.settings.sort, window.showEnemies)
-	local duration = max(window.selectedCombat.duration, 1)
+	local duration = math.max(window.selectedCombat.duration, 1)
 	local text = {}
-	tinsert(text, ("Target: %s ~ (%s)"):format(window.selectedCombat:getHostile():sub(0, 64), FormatSeconds(window.selectedCombat.duration)))
-	tinsert(text, ("--------------------"))
-	tinsert(text, ("Total %s: %s ~ (%s)"):format( window.settings.sort, NumberFormat(data.total), NumberFormat(data.total / duration) ))
-	for i = 1, min( data.count, RM.settings.report_lines ) do
+	table.insert(text, ("Target: %s ~ (%s)"):format(window.selectedCombat:getHostile():sub(0, 64), FormatSeconds(window.selectedCombat.duration)))
+	table.insert(text, ("--------------------"))
+	table.insert(text, ("Total %s: %s ~ (%s)"):format( window.settings.sort, NumberFormat(data.total), NumberFormat(data.total / duration) ))
+	for i = 1, math.min( data.count, RM.settings.report_lines ) do
 		local player = data.players[i]
 		if not player.ref.detail.isPet then
-			tinsert(text, ("%d) %s - %s (%s, %d%%) "):format( i, player.ref.detail.name:sub(0, 32), NumberFormat(player.value), NumberFormat(player.value / duration), round(player.value / data.total * 100, 2)))
+			table.insert(text, ("%d) %s - %s (%s, %d%%) "):format( i, player.ref.detail.name:sub(0, 32), NumberFormat(player.value), NumberFormat(player.value / duration), math.round(player.value / data.total * 100, 2)))
 		end
 	end
 	
@@ -732,9 +718,9 @@ function Modes.interactions:update(window)
 	end
 	
 	local data = window.selectedPlayer:getInteractions(window.settings.sort)
-	local duration = max(window.selectedCombat.duration, 1)
+	local duration = math.max(window.selectedCombat.duration, 1)
 	local rows = {}
-	local limit = min(data.count, #window.frames.rows)
+	local limit = math.min(data.count, #window.frames.rows)
 	for i = 1, limit do
 		local row = {}
 		local interaction = data.interactions[i + window.scrollOffset]
@@ -747,7 +733,7 @@ function Modes.interactions:update(window)
 			window:setMode("interactionAbilities", interaction.ref, window.selectedPlayer)
 		end
 		
-		tinsert(rows, row)
+		table.insert(rows, row)
 	end
 	
 	window:setGlobalLabel(data.total / duration)
@@ -791,14 +777,14 @@ function Modes.interactionAbilities:update(window)
 	end
 	
 	local data = window.selectedPlayer:getInteractionAbilityData()
-	local duration = max(window.selectedCombat.duration, 1)
+	local duration = math.max(window.selectedCombat.duration, 1)
 	local rows = {}
-	local limit = min(data.count, #window.frames.rows)
+	local limit = math.min(data.count, #window.frames.rows)
 	for i = 1, limit do
 		
 		-- total bar
 		if i == 1 and window.scrollOffset == 0 then
-			tinsert(rows, {
+			table.insert(rows, {
 				leftLabel = "      " .. L["Total"],
 				rightLabel = NumberFormat(data.total),
 				value = data.max,
@@ -814,7 +800,7 @@ function Modes.interactionAbilities:update(window)
 		
 		row.icon = ability.ref.detail.icon
 		row.leftLabel = "      " .. ability.ref.name
-		row.rightLabel = BuildFormat(NumberFormat(ability.value), ability.value / duration, ability.value / max(data.total, 1) * 100)
+		row.rightLabel = BuildFormat(NumberFormat(ability.value), ability.value / duration, ability.value / math.max(data.total, 1) * 100)
 		
 		row.color = RM.abilityTypeColors[ability.ref.type]
 		row.value = ability.value
@@ -822,7 +808,7 @@ function Modes.interactionAbilities:update(window)
 			window:setMode("interactionAbility", ability.ref)
 		end
 		
-		tinsert(rows, row)
+		table.insert(rows, row)
 	end
 	
 	window:setGlobalLabel(data.total / duration)
@@ -870,7 +856,7 @@ function Modes.interactionAbility:update(window)
 	local data = window.selectedAbility:getPreparedAbilityStatData(window.selectedCombat, window.settings.sort)
 	
 	local rows = {}
-	local limit = min(#data, #window.frames.rows)
+	local limit = math.min(#data, #window.frames.rows)
 	for i = 1, limit do
 		local row = {}
 		local stat = data[i + window.scrollOffset]
@@ -882,7 +868,7 @@ function Modes.interactionAbility:update(window)
 		rows[i] = row
 	end
 	
-	window:setGlobalLabel(window.selectedPlayerParent[window.settings.sort] / max(window.selectedCombat.duration, 1))
+	window:setGlobalLabel(window.selectedPlayerParent[window.settings.sort] / math.max(window.selectedCombat.duration, 1))
 	
 	return rows, #data, 1
 end
@@ -910,14 +896,14 @@ end
 Modes.combats = Mode:new("combats")
 function Modes.combats:init(window)
 	window.rowCount = #RM.Combats
-	window.scrollOffset = max(window.rowCount - #window.frames.rows, 0)
+	window.scrollOffset = math.max(window.rowCount - #window.frames.rows, 0)
 	window:setTitle(L["Combats"] .. ": " .. L[window.settings.sort])
 end
 function Modes.combats:update(window)
 	if not window.selectedCombat then return end
 	
 	local rows = {}
-	local limit = min(#RM.Combats, #window.frames.rows)
+	local limit = math.min(#RM.Combats, #window.frames.rows)
 	local ncombats = 0
 	local maxvalue = 0
 	for i = 1, limit do
@@ -925,13 +911,13 @@ function Modes.combats:update(window)
 		local combat = RM.Combats[i + window.scrollOffset]
 		
 		if not RM.settings.showOnlyBoss or (combat.hasBoss or combat == RM.CurrentCombat or combat == RM.overallCombat) then
-			local stat = combat:getPreparedPlayerData(window.settings.sort, window.showEnemies).total / max(combat.duration, 1)
+			local stat = combat:getPreparedPlayerData(window.settings.sort, window.showEnemies).total / math.max(combat.duration, 1)
 			local hostile = combat:getHostile()
 			
 			if stat > maxvalue then maxvalue = stat end
 
 			row.leftLabel = FormatSeconds(combat.duration) .. " " .. hostile
-			row.rightLabel = NumberFormat(floor(stat))
+			row.rightLabel = NumberFormat(math.floor(stat))
 			row.value = stat
 
 			row.leftClick = function()
@@ -942,7 +928,7 @@ function Modes.combats:update(window)
 		end
 	end
 	
-	window:setGlobalLabel(window.selectedCombat:getPreparedPlayerData(window.settings.sort, window.showEnemies).total / max(window.selectedCombat.duration, 1))
+	window:setGlobalLabel(window.selectedCombat:getPreparedPlayerData(window.settings.sort, window.showEnemies).total / math.max(window.selectedCombat.duration, 1))
 	
 	return rows, #RM.Combats, maxvalue
 end
@@ -969,14 +955,14 @@ function Modes.abilities:update(window)
 	end
 	
 	local data = window.selectedPlayer:getPreparedAbilityData(window.settings.sort)
-	local duration = max(window.selectedCombat.duration, 1)
+	local duration = math.max(window.selectedCombat.duration, 1)
 	local rows = {}
-	local limit = min(data.count, #window.frames.rows)
+	local limit = math.min(data.count, #window.frames.rows)
 	for i = 1, limit do
 		
 		-- total bar
 		if i == 1 and window.scrollOffset == 0 then
-			tinsert(rows, {
+			table.insert(rows, {
 				leftLabel = "      " .. L["Total"],
 				rightLabel = NumberFormat(data.total),
 				value = data.max,
@@ -992,7 +978,7 @@ function Modes.abilities:update(window)
 		
 		row.icon = ability.ref.detail.icon
 		row.leftLabel = "      " .. ability.ref.name
-		row.rightLabel = BuildFormat(NumberFormat(ability.value), ability.value / duration, ability.value / max(data.total, 1) * 100)
+		row.rightLabel = BuildFormat(NumberFormat(ability.value), ability.value / duration, ability.value / math.max(data.total, 1) * 100)
 		
 		row.color = RM.abilityTypeColors[ability.ref.type]
 		row.value = ability.value
@@ -1000,7 +986,7 @@ function Modes.abilities:update(window)
 			window:setMode("ability", ability.ref)
 		end
 		
-		tinsert(rows, row)
+		table.insert(rows, row)
 	end
 	
 	window:setGlobalLabel(data.total / duration)
@@ -1020,15 +1006,15 @@ end
 function Modes.abilities:getReportText(window)
 	local player = window.selectedPlayer
 	local data = window.selectedPlayer:getPreparedAbilityData(window.settings.sort)
-	local duration = max(window.selectedCombat.duration, 1)
+	local duration = math.max(window.selectedCombat.duration, 1)
 	
 	local text = {}
-	tinsert(text, ("Player: %s ~ Target: %s ~ (%s)"):format(player.detail.name, window.selectedCombat:getHostile():sub(0, 64), FormatSeconds(window.selectedCombat.duration)))
-	tinsert(text, ("--------------------"))
-	tinsert(text, ("Total %s: %s ~ (%s)"):format( window.settings.sort, NumberFormat(data.total), NumberFormat(data.total / duration) ))
-	for i = 1, min( data.count, RM.settings.report_lines ) do
+	table.insert(text, ("Player: %s ~ Target: %s ~ (%s)"):format(player.detail.name, window.selectedCombat:getHostile():sub(0, 64), FormatSeconds(window.selectedCombat.duration)))
+	table.insert(text, ("--------------------"))
+	table.insert(text, ("Total %s: %s ~ (%s)"):format( window.settings.sort, NumberFormat(data.total), NumberFormat(data.total / duration) ))
+	for i = 1, math.min( data.count, RM.settings.report_lines ) do
 		local ability = data.abilities[i]
-		tinsert(text, ("%d) %s - %s (%s, %d%%) "):format( i, ability.ref.name:sub(0, 32), NumberFormat(ability.value), NumberFormat(ability.value / duration), ability.value / max(window.selectedPlayer[window.settings.sort], 1) * 100))
+		table.insert(text, ("%d) %s - %s (%s, %d%%) "):format( i, ability.ref.name:sub(0, 32), NumberFormat(ability.value), NumberFormat(ability.value / duration), ability.value / math.max(window.selectedPlayer[window.settings.sort], 1) * 100))
 	end
 	
 	return text
@@ -1063,7 +1049,7 @@ function Modes.ability:update(window)
 	end
 	
 	local rows = {}
-	local limit = min(#data, #window.frames.rows)
+	local limit = math.min(#data, #window.frames.rows)
 	for i = 1, limit do
 		local row = {}
 		local stat = data[i + window.scrollOffset]
@@ -1075,7 +1061,7 @@ function Modes.ability:update(window)
 		rows[i] = row
 	end
 	
-	window:setGlobalLabel(total / max(window.selectedCombat.duration, 1))
+	window:setGlobalLabel(total / math.max(window.selectedCombat.duration, 1))
 	
 	return rows, #data, 1
 end
@@ -1096,14 +1082,14 @@ end
 RM.UI = { }
 
 function RM.UI.Update()
-	for i, window in ipairs(Windows) do
+	for _, window in pairs(Windows) do
 		window:update()
 	end
 end
 
 function RM.UI.TimerUpdate(duration)
 	local combat = RM.Combats[#RM.Combats]
-	for i, window in ipairs(Windows) do
+	for _, window in pairs(Windows) do
 		if window.selectedCombat == combat then
 			window:timerUpdate(duration)
 		end
@@ -1111,7 +1097,7 @@ function RM.UI.TimerUpdate(duration)
 end
 
 function RM.UI.NewCombat()
-	for i, window in ipairs(Windows) do
+	for _, window in pairs(Windows) do
 		-- update to current combat if last combat was selected
 		if window.selectedCombat == RM.Combats[#RM.Combats - 1] or window.selectedCombat == nil then
 			window.selectedCombat = RM.Combats[#RM.Combats]
@@ -1135,7 +1121,7 @@ function RM.UI.NewCombat()
 end
 
 function RM.UI.EndCombat()
-	for i, window in ipairs(Windows) do
+	for _, window in pairs(Windows) do
 		window.frames.buttons.combatStart:Show(true)
 		window.frames.buttons.combatEnd:Show(false)
 		
@@ -1148,13 +1134,13 @@ end
 function RM.UI.Solo(bDisabled)
 	Apollo.SetConsoleVariable("cmbtlog.disableOtherPlayers", bDisabled)
 	local color = bDisabled and "xkcdAcidGreen" or "xkcdBloodOrange"
-	for i, window in ipairs(Windows) do
+	for _, window in pairs(Windows) do
 		window.frames.solo:SetTextColor(color)
 	end
 end
 
 function RM.UI.Clear()
-	for i, window in ipairs(Windows) do
+	for _, window in pairs(Windows) do
 		window.selectedCombat = nil
 		window:setMode("combat")
 		window.frames.timerLabel:SetText("00:00")
@@ -1164,22 +1150,22 @@ function RM.UI.Clear()
 end
 
 function RM.UI.Init()
-	for i, settings in ipairs(RM.settings.windows) do
-		tinsert(Windows, Window:new(settings))
+	for _, settings in pairs(RM.settings.windows) do
+		table.insert(Windows, Window:new(settings))
 	end
 end
 
 function RM.UI.Destroy()
 	for i=#Windows,1,-1 do
-		tremove(Windows, i).frames.base:Destroy()
-		tremove(RM.settings.windows, i)
+		table.remove(Windows, i).frames.base:Destroy()
+		table.remove(RM.settings.windows, i)
 	end
 end
 
 function RM.UI.NewWindow()
 	local settings = RM.GetDefaultWindowSettings()
-	tinsert(RM.settings.windows, settings)
-	tinsert(Windows, Window:new(settings))
+	table.insert(RM.settings.windows, settings)
+	table.insert(Windows, Window:new(settings))
 	RM.UI.Visible(true)
 end
 
@@ -1192,22 +1178,22 @@ function RM.UI.Close(window)
 	
 	for i = 1, #Windows do
 		if window == Windows[i] then
-			tremove(Windows, i).frames.base:Destroy()
-			tremove(RM.settings.windows, i)
+			table.remove(Windows, i).frames.base:Destroy()
+			table.remove(RM.settings.windows, i)
 			return
 		end
 	end
 end
 
 function RM.UI.Visible(visible)
-	for i, window in ipairs(Windows) do
+	for _, window in pairs(Windows) do
 		window.frames.base:Show(visible)
 	end
 end
 
 function RM.UI.Lock(state)
 	RM.settings.lock = state
-	for i, window in ipairs(Windows) do
+	for _, window in pairs(Windows) do
 		window:Lock(state)
 	end
 end

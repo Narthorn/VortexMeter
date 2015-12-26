@@ -5,11 +5,6 @@
 
 local VortexMeter = VortexMeter
 
-local pairs = pairs
-local tinsert = table.insert
-local tremove = table.remove
-local tsort = table.sort
-
 local L = VortexMeter.L
 local Player = VortexMeter.Meta.Player
 
@@ -42,12 +37,12 @@ function Combat:getPreparedPlayerData(sort, showNpcs)
 	local players = {}
 	for _, player in pairs(self.players) do
 		if not player.detail.isPet and (not showNpcs == player.detail.player) then
-			tinsert(players, player)
+			table.insert(players, player)
 		end
 	end
 	
 	-- Players and pets > other units + sort by stat desc
-	tsort(players, function (a, b)
+	table.sort(players, function (a, b)
 		return a:getStat(sort) > b:getStat(sort)
 	end)
 	
@@ -62,7 +57,7 @@ function Combat:getPreparedPlayerData(sort, showNpcs)
 				name = player.detail.name
 			end
 			
-			tinsert(data.players, {
+			table.insert(data.players, {
 				name = name,
 				value = valuePlusPets,
 				ref = player
@@ -88,11 +83,11 @@ function Combat:getHostile()
 	end
 	
 	for _, player in pairs(self.players) do
-		tinsert(players, player)
+		table.insert(players, player)
 	end
 	
 	-- other units > Players and pets + sort by damage taken desc
-	tsort(players, function (a, b)
+	table.sort(players, function (a, b)
 		local aCond = not (a.detail.player or a.detail.isPet)
 		local bCond = not (b.detail.player or b.detail.isPet)
 		if aCond and bCond then
@@ -124,7 +119,7 @@ function Combat:linkPetToOwner(pet)
 		local owner = self.players[pet.detail.owner]
 		if owner then
 			pet.linkedToOwner = true
-			tinsert(owner.pets, pet)
+			table.insert(owner.pets, pet)
 		end
 	end
 end

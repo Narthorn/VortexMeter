@@ -5,23 +5,21 @@
 
 local VortexMeter = Apollo.GetAddon("VortexMeter")
 
-local tinsert = table.insert
-local floor = math.floor
-local round = function(val) return math.floor(val + .5) end
-local type = type
+table.empty = function(t) for k in pairs(t) do t[k] = nil end end
+math.round = function(val) return math.floor(val + .5) end
 
 function VortexMeter.formatSeconds(seconds)
 	return ("%02d:%02d"):format(seconds / 60, seconds % 60)
 end
 
 function VortexMeter.numberShortFormat(num)
-	if     round(num) > 1000000 then return ("%.1fm"):format(round(num) / 1000000)
-	elseif round(num) > 1000    then return ("%.1fk"):format(round(num) / 1000)
-	else                             return tostring(round(num)) end
+	if     math.round(num) > 1000000 then return ("%.1fm"):format(math.round(num) / 1000000)
+	elseif math.round(num) > 1000    then return ("%.1fk"):format(math.round(num) / 1000)
+	else                             return tostring(math.round(num)) end
 end
 
 function VortexMeter.numberFormat(num)
-	local str = tostring(round(num))
+	local str = tostring(math.round(num))
 	if VortexMeter.settings.showShortNumber then
 		return VortexMeter.numberShortFormat(num)
 	else
@@ -34,16 +32,16 @@ function VortexMeter.BuildFormat(absolute, perSecond, percent)
 	local args = {}
 	local format = ""
 	if VortexMeter.settings.showAbsolute then
-		tinsert(args, absolute)
+		table.insert(args, absolute)
 		format = format .. "%s" .. (VortexMeter.settings.showPercent and " (" or ", ") .. "%s"
 	else
 		format = format .. "%s"
 	end
 	
-	tinsert(args, VortexMeter.numberFormat(perSecond))
+	table.insert(args, VortexMeter.numberFormat(perSecond))
 	
 	if VortexMeter.settings.showPercent then
-		tinsert(args, percent)
+		table.insert(args, percent)
 		format = format .. (VortexMeter.settings.showAbsolute and ", " or " ") .. (not VortexMeter.settings.showAbsolute and "(" or "") .. "%.1f%%)"
 	end
 	
@@ -73,7 +71,7 @@ function VortexMeter.colorize(text, fromHex, toHex)
 	}
 	
 	for char in text:gmatch(".") do
-		tinsert(colored, ("<P TextColor=\"ff%02x%02x%02x\">%s</P>"):format(from.r, from.g, from.b, char))
+		table.insert(colored, ("<P TextColor=\"ff%02x%02x%02x\">%s</P>"):format(from.r, from.g, from.b, char))
 		from.r = from.r + step.r
 		from.g = from.g + step.g
 		from.b = from.b + step.b

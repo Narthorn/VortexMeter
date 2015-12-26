@@ -4,12 +4,6 @@
 --- Original addon : Rift Meter by Vince (http://www.curse.com/addons/rift/rift-meter)
 
 local VortexMeter = VortexMeter
-local pairs = pairs
-local tinsert = table.insert
-local tremove = table.remove
-local tsort = table.sort
-local max = math.max
-local min = math.min
 
 local L = VortexMeter.L
 local Abilities = VortexMeter.Abilities
@@ -105,10 +99,10 @@ function Player:getInteractions(sort)
 
 	local interactions = {}
 	for _, interaction in pairs(self.interactions[sort]) do
-		tinsert(interactions, interaction)
+		table.insert(interactions, interaction)
 	end
 
-	tsort(interactions, function (a, b)
+	table.sort(interactions, function (a, b)
 		return a[sort] > b[sort]
 	end)
 
@@ -116,7 +110,7 @@ function Player:getInteractions(sort)
 		local value = interaction[sort]
 		local name = interaction.detail.name
 
-		tinsert(data.interactions, {
+		table.insert(data.interactions, {
 			name = name,
 			value = value,
 			ref = interaction
@@ -127,7 +121,7 @@ function Player:getInteractions(sort)
 	end
 
 	if data.count > 0 then
-		data.max = max(data.interactions[1].value, 1)
+		data.max = math.max(data.interactions[1].value, 1)
 	end
 
 	return data
@@ -159,7 +153,7 @@ function Player:getAbilities(sort)
 				end
 			end
 			if not found then
-				tinsert(abilities, ability:clone())
+				table.insert(abilities, ability:clone())
 			end
 		end
 	end
@@ -175,13 +169,13 @@ function Player:getAbilities(sort)
 					end
 				end
 				if not found then
-					tinsert(abilities, ability:clone())
+					table.insert(abilities, ability:clone())
 				end
 			end
 		end
 	end
 
-	tsort(abilities, function (a, b)
+	table.sort(abilities, function (a, b)
 		return a.total > b.total
 	end)
 
@@ -200,7 +194,7 @@ function Player:getPreparedAbilityData(sort)
 	for _, ability in pairs(abilities) do
 		local value = ability.total
 
-		tinsert(data.abilities, {
+		table.insert(data.abilities, {
 			value = value,
 			ref = ability
 		})
@@ -209,9 +203,9 @@ function Player:getPreparedAbilityData(sort)
 		data.count = data.count + 1
 	end
 
-	data.total = max(data.total, 1)
+	data.total = math.max(data.total, 1)
 	if data.count > 0 then
-		data.max = max(data.abilities[1].value, 1)
+		data.max = math.max(data.abilities[1].value, 1)
 	end
 
 	return data
@@ -226,17 +220,17 @@ function Player:getInteractionAbilityData()
 
 	local abilities = {}
 	for _, ability in pairs(self.abilities) do
-		tinsert(abilities, ability)
+		table.insert(abilities, ability)
 	end
 
-	tsort(abilities, function (a, b)
+	table.sort(abilities, function (a, b)
 		return a.total > b.total
 	end)
 
 	for _, ability in pairs(abilities) do
 		local value = ability.total
 
-		tinsert(data.abilities, {
+		table.insert(data.abilities, {
 			value = value,
 			ref = ability
 		})
@@ -245,9 +239,9 @@ function Player:getInteractionAbilityData()
 		data.count = data.count + 1
 	end
 
-	data.total = max(data.total, 1)
+	data.total = math.max(data.total, 1)
 	if data.count > 0 then
-		data.max = max(data.abilities[1].value, 1)
+		data.max = math.max(data.abilities[1].value, 1)
 	end
 
 	return data
@@ -304,10 +298,10 @@ function Player:getTooltip(sort)
 
 	local players = {}
 	for _, player in pairs(self.interactions[sort]) do
-		tinsert(players, player)
+		table.insert(players, player)
 	end
 
-	tsort(players, function(a, b)
+	table.sort(players, function(a, b)
 		return a[sort] > b[sort]
 	end)
 
@@ -315,19 +309,19 @@ function Player:getTooltip(sort)
 
 	for i = 1, 3 do
 		if abilities[i] then
-			tinsert(result, ("   (%d%%) %s"):format(abilities[i].total / self:getStat(sort) * 100, abilities[i].name:sub(0, 16)))
+			table.insert(result, ("   (%d%%) %s"):format(abilities[i].total / self:getStat(sort) * 100, abilities[i].name:sub(0, 16)))
 		end
 	end
 
-	tinsert(result, "<P TextColor=\"FFFFD100\">" .. L["Top 3 Interactions:"] .. "</P>")
+	table.insert(result, "<P TextColor=\"FFFFD100\">" .. L["Top 3 Interactions:"] .. "</P>")
 
 	for i = 1, 3 do
 		if players[i] then
-			tinsert(result, ("   (%d%%) %s"):format(players[i][sort] / self:getStat(sort) * 100, players[i].detail.name:sub(0, 16)))
+			table.insert(result, ("   (%d%%) %s"):format(players[i][sort] / self:getStat(sort) * 100, players[i].detail.name:sub(0, 16)))
 		end
 	end
 
-	tinsert(result, "<P TextColor=\"FF33FF33\">&lt;" .. L["Middle-Click for interactions"] .. "&gt;</P>")
+	table.insert(result, "<P TextColor=\"FF33FF33\">&lt;" .. L["Middle-Click for interactions"] .. "&gt;</P>")
 
 	return table.concat(result, "\n")
 end

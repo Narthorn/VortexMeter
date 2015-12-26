@@ -9,10 +9,6 @@ local L = VortexMeter.L
 local Abilities = VortexMeter.Abilities
 local numberFormat = VortexMeter.numberFormat
 
-local max = math.max
-local min = math.min
-local round = function(val) return math.floor(val + .5) end
-
 local Ability = VortexMeter.Meta.Ability
 Ability.__index = Ability
 function Ability:new(info)
@@ -73,12 +69,12 @@ function Ability:merge(otherAbility)
 	self.totalHit = self.totalHit + otherAbility.totalHit
 	self.totalCrit = self.totalCrit + otherAbility.totalCrit
 	self.totalMultiHit = self.totalMultiHit + otherAbility.totalMultiHit
-	self.max = max(self.max, otherAbility.max)
+	self.max = math.max(self.max, otherAbility.max)
 	if self.min == 0 then
 		self.min = otherAbility.min
 	else
 		if otherAbility.min > 0 then
-			self.min = min(self.min, otherAbility.min)
+			self.min = math.min(self.min, otherAbility.min)
 		end
 	end
 	self.hits = self.hits + otherAbility.hits
@@ -120,13 +116,13 @@ end
 function Ability:getPreparedAbilityStatData(combat)
 	local stats = {
 		{ name = L["total"], value = numberFormat(self.total) },
-		{ name = L["Min/Avg/Max"], value = numberFormat(self.min) .. " / " .. numberFormat(round(self.total / self.swings)) .. " / " .. numberFormat(self.max) },
-		{ name = L["Average Hit/Crit/Multi-Hit"], value = numberFormat(round(self.totalHit / max(self.hits, 1))) .. " / " .. numberFormat(round(self.totalCrit / max(self.crits, 1))) .. " / " .. numberFormat(round(self.totalMultiHit / max(self.multihits, 1))) },
-		{ name = L["Crit Total (%)"], value = numberFormat(self.totalCrit) .. " (" .. ("%.2f%%"):format(self.totalCrit / max(self.total,1) * 100) .. ")" },
+		{ name = L["Min/Avg/Max"], value = numberFormat(self.min) .. " / " .. numberFormat(math.round(self.total / self.swings)) .. " / " .. numberFormat(self.max) },
+		{ name = L["Average Hit/Crit/Multi-Hit"], value = numberFormat(math.round(self.totalHit / math.max(self.hits, 1))) .. " / " .. numberFormat(math.round(self.totalCrit / math.max(self.crits, 1))) .. " / " .. numberFormat(math.round(self.totalMultiHit / math.max(self.multihits, 1))) },
+		{ name = L["Crit Total (%)"], value = numberFormat(self.totalCrit) .. " (" .. ("%.2f%%"):format(self.totalCrit / math.max(self.total,1) * 100) .. ")" },
 		{ name = L["Crit Rate"], value = ("%.2f%%"):format(self.crits / self.swings * 100) },
-		{ name = L["Multi-Hit Total (%)"], value = numberFormat(self.totalMultiHit) .. " (" .. ("%.2f%%"):format(self.totalMultiHit / max(self.total,1) * 100) .. ")"},
+		{ name = L["Multi-Hit Total (%)"], value = numberFormat(self.totalMultiHit) .. " (" .. ("%.2f%%"):format(self.totalMultiHit / math.max(self.total,1) * 100) .. ")"},
 		{ name = L["Multi-Hit Rate"], value = ("%.2f%%"):format(self.multihits / self.swings * 100) },
-		{ name = L["Swings (Per second)"], value = numberFormat(self.swings) .. " (" .. ("%.2f"):format(self.swings / max(combat.duration, 1)) .. ")" },
+		{ name = L["Swings (Per second)"], value = numberFormat(self.swings) .. " (" .. ("%.2f"):format(self.swings / math.max(combat.duration, 1)) .. ")" },
 		{ name = L["Hits / Crits / Multi-Hits"], value = numberFormat(self.hits) .. " / " .. numberFormat(self.crits) .. " / " .. numberFormat(self.multihits)},
 		{ name = L["Deflects (%)"], value = numberFormat(self.deflects) .. " (" .. ("%.2f%%"):format(self.deflects / self.swings * 100) .. ")" },
 		{ name = L["Interrupts"], value = numberFormat(self.interrupts) },
