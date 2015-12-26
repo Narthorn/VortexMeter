@@ -180,6 +180,8 @@ local function CombatEventsHandler(info, statType, damageAction)
 		amount = info.damage or 0
 	elseif damageAction then
 		stat = "damage"
+	elseif statType == "absorb" then
+		stat = "absorb"
 	else
 		stat = "heal"
 	end
@@ -212,6 +214,8 @@ local function CombatEventsHandler(info, statType, damageAction)
 			taken = "damageTaken"
 		elseif statType == "heal" then
 			taken = "healTaken"
+		elseif statType == "absorb" then
+			taken = "absorbTaken"
 		end
 		
 		if taken then
@@ -312,6 +316,19 @@ function VortexMeter:OnCombatLogMultiHeal(tEventArgs)
 	}
 	
 	CombatEventsHandler(info, "heal", false)
+end
+
+function VortexMeter:OnCombatLogAbsorption(tEventArgs)
+	local info = {
+		target = tEventArgs.unitTarget,
+		caster = tEventArgs.unitCaster,
+		ability = tEventArgs.splCallingSpell,
+		damagetype = GameLib.CodeEnumDamageType.Heal,
+		absorb = tEventArgs.nAmount,
+		crit = tEventArgs.eCombatResult == GameLib.CodeEnumCombatResult.Critical,
+	}
+
+	CombatEventsHandler(info, "absorb", false)
 end
 
 function VortexMeter:OnCombatLogCCState(tEventArgs)
@@ -461,6 +478,7 @@ function VortexMeter.On()
 	Apollo.RegisterEventHandler("CombatLogMultiHitShields", "OnCombatLogMultiHit",     VortexMeter)
 	Apollo.RegisterEventHandler("CombatLogHeal",            "OnCombatLogHeal",         VortexMeter)
 	Apollo.RegisterEventHandler("CombatLogMultiHeal",       "OnCombatLogMultiHeal",    VortexMeter)
+	Apollo.RegisterEventHandler("CombatLogAbsorption",      "OnCombatLogAbsorption",   VortexMeter)
 	Apollo.RegisterEventHandler("CombatLogDeflect",         "OnCombatLogDeflect",      VortexMeter)
 	Apollo.RegisterEventHandler("CombatLogTransference",    "OnCombatLogTransference", VortexMeter)
 	Apollo.RegisterEventHandler("CombatLogCCState",         "OnCombatLogCCState",      VortexMeter)
@@ -480,6 +498,7 @@ function VortexMeter.Off()
 	Apollo.RemoveEventHandler("CombatLogMultiHitShields", VortexMeter)
 	Apollo.RemoveEventHandler("CombatLogHeal",            VortexMeter)
 	Apollo.RemoveEventHandler("CombatLogMultiHeal",       VortexMeter)
+	Apollo.RemoveEventHandler("CombatLogAbsorption",      VortexMeter)
 	Apollo.RemoveEventHandler("CombatLogDeflect",         VortexMeter)
 	Apollo.RemoveEventHandler("CombatLogTransference",    VortexMeter)
 	Apollo.RemoveEventHandler("CombatLogCCState",         VortexMeter)

@@ -21,6 +21,8 @@ local Sortmodes = {
 	"heal",
 	"damageTaken",
 	"healTaken",
+	"absorb",
+	"absorbTaken",
 	"overheal",
 	"overkill",
 	"interrupts",

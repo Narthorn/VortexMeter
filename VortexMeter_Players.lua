@@ -21,6 +21,8 @@ function Player:new(unit, reduced)
 	self.overkill = 0
 	self.heal = 0
 	self.healTaken = 0
+	self.absorb = 0
+	self.absorbTaken = 0
 	self.overheal = 0
 	self.interrupts = 0
 
@@ -40,6 +42,8 @@ function Player:new(unit, reduced)
 			overkill = {},
 			heal = {},
 			healTaken = {},
+			absorb = {},
+			absorbTaken = {},
 			overheal = {},
 			interrupts = {}
 		}
