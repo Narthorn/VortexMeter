@@ -275,6 +275,7 @@ function Player:createFakeAbility()
 		self.crits = 0
 		self.multihits = 0
 		self.swings = 0
+		self.glances = 0
 		self.filtered = 0
 		self.interrupts = 0
 

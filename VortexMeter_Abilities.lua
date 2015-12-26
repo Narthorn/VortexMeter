@@ -31,6 +31,7 @@ function Ability:new(info)
 	self.filtered = 0
 	self.interrupts = 0
 	self.deflects = 0
+	self.glances = 0
 
 	if info.owner then
 	  self.name = self.name .. " (Pet: " .. info.caster:GetName() .. ")"
@@ -59,6 +60,7 @@ function Ability:clone()
 		filtered = self.filtered,
 		interrupts = self.interrupts,
 		deflects = self.deflects,
+		glances = self.glances,
 	}
 
 	return setmetatable(clone, Ability)
@@ -84,6 +86,7 @@ function Ability:merge(otherAbility)
 	self.filtered = self.filtered + otherAbility.filtered
 	self.interrupts = self.interrupts + otherAbility.interrupts
 	self.deflects = self.deflects + otherAbility.deflects
+	self.glances = self.glances + otherAbility.glances
 end
 
 function Ability:add(statType, amount, info)
@@ -110,6 +113,9 @@ function Ability:add(statType, amount, info)
 			if amount > self.max then self.max = amount end
 			if (amount < self.min or self.min == 0) then self.min = amount end
 		end
+		if info.glance and info.glance > 0 then
+			self.glances = self.glances + 1
+		end
 	end
 end
 
@@ -125,6 +131,7 @@ function Ability:getPreparedAbilityStatData(combat)
 		{ name = L["Swings (Per second)"], value = numberFormat(self.swings) .. " (" .. ("%.2f"):format(self.swings / math.max(combat.duration, 1)) .. ")" },
 		{ name = L["Hits / Crits / Multi-Hits"], value = numberFormat(self.hits) .. " / " .. numberFormat(self.crits) .. " / " .. numberFormat(self.multihits)},
 		{ name = L["Deflects (%)"], value = numberFormat(self.deflects) .. " (" .. ("%.2f%%"):format(self.deflects / self.swings * 100) .. ")" },
+		{ name = L["Glances (%)"], value = numberFormat(self.glances) .. " (" .. ("%.2f%%"):format(self.glances / self.swings * 100) .. ")" },
 		{ name = L["Interrupts"], value = numberFormat(self.interrupts) },
 	}
 
