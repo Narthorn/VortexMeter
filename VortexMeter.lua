@@ -358,32 +358,20 @@ function VortexMeter:OnCombatLogDeflect(tEventArgs)
 end
 
 function VortexMeter:OnCombatLogTransference(tEventArgs)
-	local info = {
-		target = tEventArgs.unitTarget,
-		caster = tEventArgs.unitCaster,
-		owner = tEventArgs.unitCasterOwner,
-		ability = tEventArgs.splCallingSpell,
-		damagetype = tEventArgs.eDamageType,
-		damage = tEventArgs.nDamageAmount + tEventArgs.nAbsorption + tEventArgs.nShield,
-		periodic = tEventArgs.bPeriodic,
-		overkill = tEventArgs.nOverkill,
-		crit = tEventArgs.eCombatResult == GameLib.CodeEnumCombatResult.Critical,
-	}
-	
-	CombatEventsHandler(info, "damage", true)
-	
-	local info = {
-		target = tEventArgs.unitTarget,
-		caster = tEventArgs.unitCaster,
-		owner = tEventArgs.unitCasterOwner,
-		ability = tEventArgs.splCallingSpell,
-		damagetype = GameLib.CodeEnumDamageType.Heal,
-		heal = tEventArgs.tHealData[1].nHealAmount,
-		overheal = tEventArgs.tHealData[1].nOverheal,
-		crit = tEventArgs.eCombatResult == GameLib.CodeEnumCombatResult.Critical,
-	}
-	
-	CombatEventsHandler(info, "heal", false)
+	VortexMeter:OnCombatLogDamage(tEventArgs)
+
+	for _,tHeal in pairs(tEventArgs.tHealData) do
+		if tHeal.eVitalType == GameLib.CodeEnumVital.Health then
+			tEventArgs.unitTarget = tHeal.unitHealed
+			tEventArgs.nHealAmount = tHeal.nHealAmount
+			tEventArgs.nOverheal = tHeal.nOverheal
+			VortexMeter:OnCombatLogHeal(tEventArgs)
+		elseif tHeal.eVitalType == GameLib.CodeEnumVital.Absorption then
+			tEventArgs.unitTarget = tHeal.unitHealed
+			tEventArgs.nAmount = tHeal.nHealAmount
+			VortexMeter:OnCombatLogAbsorption(tEventArgs)
+		end
+	end
 end
 
 function VortexMeter:OnCombatLogDamage(tEventArgs)
