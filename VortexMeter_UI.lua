@@ -406,7 +406,7 @@ function RM:OnButtonStart(wndHandler, wndControl, eMouseButton)
 end
 
 function RM:OnButtonStop(wndHandler, wndControl, eMouseButton)
-	RM.EndCombat(true)
+	RM.EndCombat()
 end
 
 function RM:OnButtonPin(wndHandler, wndControl, eMouseButton)

@@ -109,13 +109,9 @@ function Combat:new(overall)
 	self.hasBoss = false
 	return setmetatable(self, Combat)
 end
-function Combat:endCombat(durationIsCallTime)
-	local now = GameLib.GetGameTime()
-	if durationIsCallTime then
-		self.duration = now - self.startTime
-	else
-		self.duration = now - self.startTime - (now - LastDamageAction)
-	end
+function Combat:End()
+	-- snap duration back to time of last recorded event
+	self.duration = LastDamageAction - self.startTime
 end
 function Combat:getPreparedPlayerData(sort, showNpcs)
 	local data = {
@@ -665,12 +661,12 @@ function VortexMeter.NewCombat(permanent)
 	VortexMeter.UI.NewCombat()
 end
 
-function VortexMeter.EndCombat(durationIsCallTime)
+function VortexMeter.EndCombat()
 	if not InCombat then
 		return
 	end
 	
-	VortexMeter.CurrentCombat:endCombat(durationIsCallTime)
+	VortexMeter.CurrentCombat:End()
 	VortexMeter.overallCombat.previousDuration = VortexMeter.overallCombat.previousDuration + VortexMeter.CurrentCombat.duration
 	VortexMeter.overallCombat.duration = VortexMeter.overallCombat.previousDuration
 	InCombat = false
