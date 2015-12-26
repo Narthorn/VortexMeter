@@ -3,6 +3,7 @@
 	<Script Name="VortexMeter.lua"/>
 	<Script Name="VortexMeter_Utilities.lua"/>
 	<Script Name="VortexMeter_Abilities.lua"/>
+	<Script Name="VortexMeter_Players.lua"/>
 	<Script Name="VortexMeter_UI.lua"/>
 	<Script Name="VortexMeter_Config.lua"/>
 	<Script Name="locales/English.lua"/>
