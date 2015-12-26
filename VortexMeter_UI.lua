@@ -412,7 +412,7 @@ end
 function RM:OnButtonPin(wndHandler, wndControl, eMouseButton)
 	local window = wndHandler:GetParent():GetParent():GetData()
 	
-	window:setMode("combat", RM.combats[#RM.combats])
+	window:setMode("combat", RM.Combats[#RM.Combats])
 end
 
 function RM:OnButtonEnemies(wndHandler, wndControl, eMouseButton)
@@ -606,8 +606,8 @@ function Modes.combat:init(window, combat)
 	end
 	
 	if not window.selectedCombat then
-		if #RM.combats > 0 then
-			window.selectedCombat = RM.combats[#RM.combats]
+		if #RM.Combats > 0 then
+			window.selectedCombat = RM.Combats[#RM.Combats]
 		end
 	end
 	
@@ -670,7 +670,7 @@ function Modes.combat:update(window)
 	return rows, data.count, data.max
 end
 function Modes.combat:rightClick(window)
-	if #RM.combats > 0 then
+	if #RM.Combats > 0 then
 		window:setMode("combats")
 	end
 end
@@ -694,17 +694,17 @@ function Modes.combat:getReportText(window)
 end
 
 function Modes.combat:mouse4Click(window)
-	for i, combat in ipairs(RM.combats) do
+	for i, combat in ipairs(RM.Combats) do
 		if combat == window.selectedCombat and i > 1 then
-			window:setMode("combat", RM.combats[i - 1])
+			window:setMode("combat", RM.Combats[i - 1])
 			return
 		end
 	end
 end
 function Modes.combat:mouse5Click(window)
-	for i, combat in ipairs(RM.combats) do
-		if combat == window.selectedCombat and i < #RM.combats then
-			window:setMode("combat", RM.combats[i + 1])
+	for i, combat in ipairs(RM.Combats) do
+		if combat == window.selectedCombat and i < #RM.Combats then
+			window:setMode("combat", RM.Combats[i + 1])
 			return
 		end
 	end
@@ -909,7 +909,7 @@ end
 
 Modes.combats = Mode:new("combats")
 function Modes.combats:init(window)
-	window.rowCount = #RM.combats
+	window.rowCount = #RM.Combats
 	window.scrollOffset = max(window.rowCount - #window.frames.rows, 0)
 	window:setTitle(L["Combats"] .. ": " .. L[window.settings.sort])
 end
@@ -917,12 +917,12 @@ function Modes.combats:update(window)
 	if not window.selectedCombat then return end
 	
 	local rows = {}
-	local limit = min(#RM.combats, #window.frames.rows)
+	local limit = min(#RM.Combats, #window.frames.rows)
 	local ncombats = 0
 	local maxvalue = 0
 	for i = 1, limit do
 		local row = {}
-		local combat = RM.combats[i + window.scrollOffset]
+		local combat = RM.Combats[i + window.scrollOffset]
 		
 		if not RM.settings.showOnlyBoss or (combat.hasBoss or combat == RM.CurrentCombat or combat == RM.overallCombat) then
 			local stat = combat:getPreparedPlayerData(window.settings.sort, window.showEnemies).total / max(combat.duration, 1)
@@ -935,7 +935,7 @@ function Modes.combats:update(window)
 			row.value = stat
 
 			row.leftClick = function()
-			window:setMode("combat", RM.combats[i + window.scrollOffset]) end
+			window:setMode("combat", RM.Combats[i + window.scrollOffset]) end
 			
 			ncombats = ncombats + 1
 			rows[ncombats] = row
@@ -944,7 +944,7 @@ function Modes.combats:update(window)
 	
 	window:setGlobalLabel(window.selectedCombat:getPreparedPlayerData(window.settings.sort, window.showEnemies).total / max(window.selectedCombat.duration, 1))
 	
-	return rows, #RM.combats, maxvalue
+	return rows, #RM.Combats, maxvalue
 end
 
 -- Mode: Ability list
@@ -1102,7 +1102,7 @@ function RM.UI.Update()
 end
 
 function RM.UI.TimerUpdate(duration)
-	local combat = RM.combats[#RM.combats]
+	local combat = RM.Combats[#RM.Combats]
 	for i, window in ipairs(Windows) do
 		if window.selectedCombat == combat then
 			window:timerUpdate(duration)
@@ -1113,8 +1113,8 @@ end
 function RM.UI.NewCombat()
 	for i, window in ipairs(Windows) do
 		-- update to current combat if last combat was selected
-		if window.selectedCombat == RM.combats[#RM.combats - 1] or window.selectedCombat == nil then
-			window.selectedCombat = RM.combats[#RM.combats]
+		if window.selectedCombat == RM.Combats[#RM.Combats - 1] or window.selectedCombat == nil then
+			window.selectedCombat = RM.Combats[#RM.Combats]
 			
 			if window.selectedPlayer then
 				window.selectedPlayerDetail = window.selectedPlayer.detail
@@ -1139,7 +1139,7 @@ function RM.UI.EndCombat()
 		window.frames.buttons.combatStart:Show(true)
 		window.frames.buttons.combatEnd:Show(false)
 		
-		if window.selectedCombat == RM.combats[#RM.combats] then
+		if window.selectedCombat == RM.Combats[#RM.Combats] then
 			window:timerUpdate(window.selectedCombat.duration)
 		end
 	end
