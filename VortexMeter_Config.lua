@@ -82,9 +82,9 @@ function RM.ConfigInit()
 		window.updatetext:SetText(RM.settings.updaterate)
 		
 		window.mousetransparencyslider = window.base:FindChild("MouseTransparencySlider")
-		window.mousetransparencyslider:SetValue((RM.settings.mousetransparancy / 10))
+		window.mousetransparencyslider:SetValue((RM.settings.mousetransparency / 10))
 		window.mousetransparencytext = window.base:FindChild("MouseTransparencyValue")
-		window.mousetransparencytext:SetText(RM.settings.mousetransparancy)
+		window.mousetransparencytext:SetText(RM.settings.mousetransparency)
 		
 	end
 	
@@ -242,7 +242,7 @@ end
 
 function RM:OnMouseTransparencySliderChanged(wndHandler, wndControl, fNewValue, fOldValue)
 	RM.configWindow.mousetransparencytext:SetText(fNewValue / 10)
-	RM.settings.mousetransparancy = (fNewValue / 10)
+	RM.settings.mousetransparency = (fNewValue / 10)
 	window.frames.header:SetOpacity(RM.settings.mousetransparency)
 	window.frames.footer:SetOpacity(RM.settings.mousetransparency)
 end
