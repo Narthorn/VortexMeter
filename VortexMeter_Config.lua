@@ -243,6 +243,6 @@ end
 function RM:OnMouseTransparencySliderChanged(wndHandler, wndControl, fNewValue, fOldValue)
 	RM.configWindow.mousetransparencytext:SetText(fNewValue / 10)
 	RM.settings.mousetransparancy = (fNewValue / 10)
-	window.frames.header:SetOpacity(RM.settings.mousetransparancy)
-	window.frames.footer:SetOpacity(RM.settings.mousetransparancy)
+	window.frames.header:SetOpacity(RM.settings.mousetransparency)
+	window.frames.footer:SetOpacity(RM.settings.mousetransparency)
 end
