@@ -231,7 +231,9 @@ end
 function RM:OnOpacitySliderChanged(wndHandler, wndControl, fNewValue, fOldValue)
 	RM.configWindow.opacitytext:SetText(fNewValue / 10)
 	RM.settings.opacity = fNewValue / 10
-	RM.Windows[1].frames.opacitybackground:SetOpacity(RM.settings.opacity)
+	for i = 1, #RM.Windows do
+		RM.Windows[i].frames.opacitybackground:SetOpacity(RM.settings.opacity)
+	end
 end
 
 function RM:OnUpdateRateSliderChanged(wndHandler, wndControl, fNewValue, fOldValue)
@@ -243,6 +245,8 @@ end
 function RM:OnMouseTransparencySliderChanged(wndHandler, wndControl, fNewValue, fOldValue)
 	RM.configWindow.mousetransparencytext:SetText(fNewValue / 10)
 	RM.settings.mousetransparency = (fNewValue / 10)
-	window.frames.header:SetOpacity(RM.settings.mousetransparency)
-	window.frames.footer:SetOpacity(RM.settings.mousetransparency)
+	for i = 1, #RM.Windows do
+		RM.Windows[i].frames.header:SetOpacity(RM.settings.mousetransparency)
+		RM.Windows[i].frames.footer:SetOpacity(RM.settings.mousetransparency)
+	end
 end
