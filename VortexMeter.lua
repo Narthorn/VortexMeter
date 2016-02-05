@@ -26,7 +26,7 @@ VortexMeter = {
 		tooltips = true,
 		enabled = true,
 		updaterate = 0.1,
-		mousetransparancy = 0.5,
+		mousetransparency = 0.5,
 	},
 	
 	-- Class colors taken directly from website
