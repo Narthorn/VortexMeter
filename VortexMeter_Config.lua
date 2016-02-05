@@ -37,7 +37,7 @@ function RM.ConfigInit()
 		
 		window.tabwindows[window.currenttab]:Show(true)
 		window.tabs[window.currenttab]:SetOpacity(0.9)
-		for i = 2, #window.tabs do
+		for i = 1, #window.tabs do
 			window.tabs[i]:SetOpacity(0.2)
 			window.tabwindows[i]:Show(false)
 		end
@@ -82,7 +82,7 @@ function RM.ConfigInit()
 		window.updatetext:SetText(RM.settings.updaterate)
 		
 		window.mousetransparencyslider = window.base:FindChild("MouseTransparencySlider")
-		window.mousetransparencyslider:SetValue((RM.settings.mousetransparency / 10))
+		window.mousetransparencyslider:SetValue(RM.settings.mousetransparency / 10)
 		window.mousetransparencytext = window.base:FindChild("MouseTransparencyValue")
 		window.mousetransparencytext:SetText(RM.settings.mousetransparency)
 		
