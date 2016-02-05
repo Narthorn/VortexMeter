@@ -37,7 +37,7 @@ function RM.ConfigInit()
 		
 		window.tabwindows[window.currenttab]:Show(true)
 		window.tabs[window.currenttab]:SetOpacity(0.9)
-		for i = 1, #window.tabs do
+		for i = 2, #window.tabs do
 			window.tabs[i]:SetOpacity(0.2)
 			window.tabwindows[i]:Show(false)
 		end
