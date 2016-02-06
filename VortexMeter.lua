@@ -283,6 +283,12 @@ function VortexMeter:OnRestore(eType, tSavedSettings)
 			self.settings[key] = value
 		end
 	end
+
+	-- typo fix, TODO remove this for next version
+	if tSavedSettings.mousetransparancy ~= nil then
+		self.settings.mousetransparency = tSavedSettings.mousetransparancy
+	end
+
 	self.bSettingsLoaded = true
 end
 
