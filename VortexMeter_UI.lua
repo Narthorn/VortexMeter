@@ -136,8 +136,8 @@ function Window:init()
 	self:Lock(RM.settings.lock)
 
 	self.frames.opacitybackground:SetOpacity(RM.settings.opacity)
-	self.frames.header:SetOpacity(RM.settings.mousetransparancy)
-	self.frames.footer:SetOpacity(RM.settings.mousetransparancy)
+	self.frames.header:SetOpacity(RM.settings.mousetransparency)
+	self.frames.footer:SetOpacity(RM.settings.mousetransparency)
 
 	self.selectedMode:init(self)
 end
@@ -351,8 +351,8 @@ end
 function RM:OnFrameMouseExit(wndHandler, wndControl, x, y)
 	if wndHandler ~= wndControl then return end
 	local window = wndHandler:GetData()
-	window.frames.header:SetOpacity(RM.settings.mousetransparancy)
-	window.frames.footer:SetOpacity(RM.settings.mousetransparancy)
+	window.frames.header:SetOpacity(RM.settings.mousetransparency)
+	window.frames.footer:SetOpacity(RM.settings.mousetransparency)
 end
 
 function RM:OnFrameWindowMove(wndHandler, wndControl, left, top, right, bottom)
